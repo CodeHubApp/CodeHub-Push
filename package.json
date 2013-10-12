@@ -11,8 +11,8 @@
     "mongoose": "*",
     "octonode": "*",
     "async": "*",
-    "isodate": "*",
     "apn": "*",
-    "underscore": "*"
+    "underscore": "*",
+    "time": "*"
   }
 }

@@ -1,6 +1,9 @@
 // Bring Mongoose into the app
 var mongoose = require( 'mongoose' );
 
+// We want to set everything in UTC
+var time = require('time');
+
 // Grab the passwords
 var passwords = require('./passwords.json');
 
@@ -53,9 +56,11 @@ var registrationSchema = mongoose.Schema({
 
 // Update the created_at and updated_at during saves
 registrationSchema.pre('save', function(next) {
-	this.updated_at = new Date;
+	var d = new time.Date();
+	d.setTimezone('UTC');
+	this.updated_at = d;
 	if (!this.created_at) {
-		this.created_at = new Date;
+		this.created_at = d;
 	}
 	next();
 });

@@ -3,17 +3,20 @@
  * Module dependencies.
  */
 
+
+// We want to keep everything in a specific timezone (Zulu)
+var time = require('time')(Date);
+
 var express = require('express')
   , http = require('http')
   , db = require('./db')
   , github = require('./github')
   , async = require('async')
-  , isodate = require('isodate')
   , push = require('./push')
   , _ = require('underscore');
 
 // Specifies how often to run the update loop
-var updateTime = 1000 * 60 * 5;
+var updateTime = 1000 * 60 * 10;
 
 var app = express();
 
@@ -86,34 +89,38 @@ function processNotifications(reg, notifications, callback) {
 		// We don't care about things that we already sent in the past
 		// However, we don't want to use the 'since' tag since we need to see
 		// how many are still in the notifications queue.
-		if (isodate(entry.updated_at) < reg.updated_at) {
-			return;
+		if (new Date(entry.updated_at) < reg.updated_at) {
+			return function(callback) { callback(); };
 		}
 
 		return function(callback) {
             var detailCallback = function(err, body, newEtag) {
             	if (err) return callback(err);
 
-	            // If the two urls are the same then it's most likely that someone
-	            // just created the entry. If they're different it's most likely a comment
-	            var created = entry.subject.url === entry.subject.last_comment_url;
-                var num = entry.subject.url.substring(entry.subject.url.lastIndexOf('/') + 1);
-                var msg = body.user.login + (created ? ' opened' : ' commented on');
-             
-                if (entry.subject.type === 'Issue') {
-                    msg += ' issue';
-                    msg += ' ' + entry.repository.full_name + '#' + num;
-                } else if (entry.subject.type === 'PullRequest') {
-                    msg += ' pull request';
-                    msg += ' ' + entry.repository.full_name + '#' + num;
-                } else if (entry.subject.type === 'Commit') {
-                    num = num.substring(0, 6);
-                    msg += ' commit';
-                    msg += ' ' + entry.repository.full_name + '@' + num;
-                }
+            	try {
+		            // If the two urls are the same then it's most likely that someone
+		            // just created the entry. If they're different it's most likely a comment
+		            var created = entry.subject.url === entry.subject.latest_comment_url;
+	                var num = entry.subject.url.substring(entry.subject.url.lastIndexOf('/') + 1);
+	                var msg = body.user.login + (created ? ' opened' : ' commented on');
+	             
+	                if (entry.subject.type === 'Issue') {
+	                    msg += ' issue';
+	                    msg += ' ' + entry.repository.full_name + '#' + num;
+	                } else if (entry.subject.type === 'PullRequest') {
+	                    msg += ' pull request';
+	                    msg += ' ' + entry.repository.full_name + '#' + num;
+	                } else if (entry.subject.type === 'Commit') {
+	                    num = num.substring(0, 6);
+	                    msg += ' commit';
+	                    msg += ' ' + entry.repository.full_name + '@' + num;
+	                }
 
-                push.send(reg.tokens, total, msg);
-                callback(null);
+	                push.send(reg.tokens, total, msg);
+	                callback(null);
+	            } catch (err) {
+	            	callback(err);
+	            }
             };
 
             // Get the latest comment
@@ -179,7 +186,7 @@ function doUpdates() {
 					finish(err);
 				}
 			};
-		})
+		});
 
 		// Do things 5 at a time to avoid flooding the server
 		async.parallelLimit(tasks, 5, function(err, results) {
