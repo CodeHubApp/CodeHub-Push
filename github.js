@@ -1,9 +1,10 @@
 // module requirements
 var request = require('request');
+var config = require('./config');
 
-var portal = 'https://api.github.com';
-
-var userAgent = 'codehub-push';
+console.log(config);
+// Grab things from the config
+var portal = config.github.portal;
 
 function createUri(path, args) {
     var base = path + '?';
@@ -47,7 +48,7 @@ function get(url, oauth, etag, callback, args) {
         uri: createUri(url, args),
         method: 'GET',
         headers: {
-            'User-Agent': userAgent,
+            'User-Agent': config.github.userAgent,
             'If-None-Match': etag,
             'Authorization': 'token ' + oauth
         }

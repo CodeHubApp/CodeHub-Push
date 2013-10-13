@@ -1,27 +1,20 @@
-
 /**
  * Module dependencies.
  */
-
-
-// We want to keep everything in a specific timezone (Zulu)
-var time = require('time')(Date);
-
-var express = require('express')
+var time = require('time')(Date)
+  , express = require('express')
   , http = require('http')
   , db = require('./db')
   , github = require('./github')
   , async = require('async')
   , push = require('./push')
+  , config = require('./config')
   , _ = require('underscore');
-
-// Specifies how often to run the update loop
-var updateTime = 1000 * 60 * 10;
 
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 3000);
+app.set('port', config.port);
 app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.bodyParser());
@@ -189,10 +182,10 @@ function doUpdates() {
         });
 
         // Do things 5 at a time to avoid flooding the server
-        async.parallelLimit(tasks, 5, function(err, results) {
+        async.parallelLimit(tasks, config.registrationBatch, function(err, results) {
             console.log("Update loop complete.");
-            setTimeout(doUpdates, updateTime);
-        })
+            setTimeout(doUpdates, config.updateTime);
+        });
     });
 };
 
@@ -200,5 +193,5 @@ http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 
   //Start loop for updates
-  setTimeout(doUpdates, updateTime);
+  setTimeout(doUpdates, config.updateTime);
 });

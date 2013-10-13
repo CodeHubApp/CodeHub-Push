@@ -1,14 +1,12 @@
 // Bring Mongoose into the app
 var mongoose = require( 'mongoose' );
+var config = require('./config');
 
 // We want to set everything in UTC
 var time = require('time');
 
-// Grab the passwords
-var passwords = require('./passwords.json');
-
 // Build the connection string
-var dbURI = 'mongodb://' + passwords.mongodb.user + ':' + passwords.mongodb.pass + '@ds049848.mongolab.com:49848/github-push';
+var dbURI = config.mongodb;
 
 // Create the database connection
 mongoose.connect(dbURI);

@@ -1,7 +1,8 @@
 var apn = require('apn');
+var config = require('./config');
 
-var service = new apn.connection({ gateway:'gateway.sandbox.push.apple.com' });
-var feedback = new apn.feedback({ address: 'feedback.sandbox.push.apple.com', interval: 300, batchFeedback: true });
+var service = new apn.connection({ gateway: config.push.serviceGateway });
+var feedback = new apn.feedback({ address: config.push.feedbackGateway, interval: config.push.feedbackInterval, batchFeedback: true });
 
 feedback.on('feedback', function(feedbackData) {
     var time, device;
@@ -40,7 +41,7 @@ service.on('socketError', console.error);
 // Send a push notification!
 exports.send = function(tokens, badge, msg, payload) {
     var data = new apn.Notification();
-    data.badge = badge;
+    //data.badge = badge;
     data.alert = msg;
     data.sound = 'default';
     data.payload = payload;
