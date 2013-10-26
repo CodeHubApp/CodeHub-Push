@@ -17,7 +17,7 @@ config.registrationBatch = 5;
 config.github = {};
 
 // The user agent when connecting to GitHub
-config.github.userAgent = 'github-push';
+config.github.userAgent = 'codehub-push';
 
 // The address to GitHub API server
 config.github.portal = 'https://api.github.com';
