@@ -9,8 +9,10 @@ var time = require('time')(Date)
   , async = require('async')
   , push = require('./push')
   , config = require('./config')
-  , _ = require('underscore')
-  , require('newrelic');
+  , _ = require('underscore');
+
+// NewRelic
+require('newrelic');
 
 var app = express();
 
