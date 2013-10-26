@@ -8,7 +8,7 @@ config.port = process.env.PORT || 3000;
 config.updateTime = 1000 * 60 * 5;
 
 // The mongo address where the database is kept
-config.mongodb = process.env.MONGODB;
+config.mongodb = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || process.env.MONGODB;
 
 // The amount of registrations to process at any given time
 config.registrationBatch = 5;
