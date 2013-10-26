@@ -9,10 +9,10 @@
     "express": "3.1.2",
     "jade": "*",
     "mongoose": "*",
-    "octonode": "*",
     "async": "*",
     "apn": "*",
     "underscore": "*",
-    "time": "*"
+    "time": "*",
+    "request": "*"
   }
 }
