@@ -6,7 +6,7 @@ This application has two endpoints: /register and /unregister. Registering requi
 for that specific user. Using that information, the server will poll GitHub every X minutes for updates in
 that user's notifications. If notifications are found, a push notification is generated for each and pushed out to the device.
 
-Wan't to talk about it? Find me on Twitter at @thedillonb, or @githubapp. 
+Wan't to talk about it? Find me on Twitter at @thedillonb, or @codehubapp. 
 
 CodeHub
 -----------
