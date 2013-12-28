@@ -39,8 +39,6 @@ exports.process = function(oauth, lastUpdated, notification, callback) {
         }
     };
 
-    console.log(notification.subject.latest_comment_url)
-
     // Get the latest comment
     github.get(notification.subject.latest_comment_url, oauth, null, detailCallback);
 }

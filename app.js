@@ -45,8 +45,6 @@ app.post('/unregister', function(req, res) {
 	var token = req.body.token;
 	var oauth = req.body.oauth;
 
-	console.log(token + " - " + oauth);
-
 	var query = db.Registration.findOne({'oauth': oauth}).exec(function(err, reg) {
 		if (err) {
 			console.error(err);
@@ -107,7 +105,7 @@ function processRegistration(reg, callback) {
 		if (newEtag === reg.etag) return callback();
 
 		var saveEtagTask = function(callback) {
-			//reg.etag = newEtag;
+			reg.etag = newEtag;
 			reg.save(function(err) {
 				if (err) console.error(err);
 				callback();
@@ -119,7 +117,7 @@ function processRegistration(reg, callback) {
 			var tasks = _.map(results, function(entry) {
 				return function(callback) {
 					github.process(reg.oauth, reg.lastUpdated, entry, function(err, msg) {
-						push.send(reg.tokens, 0, msg, {});
+						push.send(reg.tokens, 0, msg, {u: reg.username, r: entry.repository.full_name});
 						callback(err);
 					});
 				};
