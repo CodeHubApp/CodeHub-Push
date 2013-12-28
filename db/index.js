@@ -1,6 +1,6 @@
 // Bring Mongoose into the app
 var mongoose = require( 'mongoose' );
-var config = require('./config');
+var config = require('../config');
 
 // We want to set everything in UTC
 var time = require('time');

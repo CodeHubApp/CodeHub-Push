@@ -1,8 +1,6 @@
-// module requirements
 var request = require('request');
-var config = require('./config');
+var config = require('../config');
 
-console.log(config);
 // Grab things from the config
 var portal = config.github.portal;
 
@@ -18,6 +16,10 @@ function createUri(path, args) {
 
 function parseResponse(callback) {
     return function(err, res, body) {
+        if (err) {
+            return callback(new Error(err));
+        }
+
         var _ref;
         if (Math.floor(res.statusCode / 100) === 5) {
             return callback(new Error('Error ' + res.statusCode));
@@ -53,14 +55,10 @@ function get(url, oauth, etag, callback, args) {
             'Authorization': 'token ' + oauth
         }
     }, parseResponse(response));
-}
-
+};
 exports.get = get;
-
 
 // Get the notifications for an oauth user
 exports.notifications = function(oauth, etag, callback) {
     get(portal + '/notifications', oauth, etag, callback);
 };
-
-

@@ -1,7 +1,7 @@
 var apn = require('apn');
-var config = require('./config');
+var config = require('../config');
 
-var service = new apn.connection({ gateway: config.push.serviceGateway });
+var service = new apn.connection({ gateway: config.push.serviceGateway, cert: __dirname + '/cert.pem', key: __dirname + '/key.pem' });
 var feedback = new apn.feedback({ address: config.push.feedbackGateway, interval: config.push.feedbackInterval, batchFeedback: true });
 
 feedback.on('feedback', function(feedbackData) {
@@ -41,7 +41,7 @@ service.on('socketError', console.error);
 // Send a push notification!
 exports.send = function(tokens, badge, msg, payload) {
     var data = new apn.Notification();
-    //data.badge = badge;
+    data.badge = badge;
     data.alert = msg;
     data.sound = 'default';
     data.payload = payload;
