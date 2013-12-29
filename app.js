@@ -41,6 +41,11 @@ function errorAndEnd(okCode, errorCode, res) {
 	};
 }
 
+app.get('/', function(req, res) {
+	res.send(200);
+	res.end();
+});
+
 app.post('/unregister', function(req, res) {
 	var token = req.body.token;
 	var oauth = req.body.oauth;
@@ -95,6 +100,26 @@ app.post('/register', function(req, res) {
 	});
 });
 
+app.get('/registered', function(req, res) {
+	var token = req.query.token;
+	var oauth = req.query.oauth;
+
+	db.Registration.findOne({'oauth': oauth}).exec(function(err, reg) {
+		if (err) {
+			console.error(err);
+			res.send(400);
+			res.end();
+		}
+
+		if (reg && _.contains(reg.tokens, token)) {
+			res.send(200);
+			res.send();
+		} else {
+			res.send(404);
+			res.send();
+		}
+	});
+});
 
 // Process a registration by grabbing the notifications for it
 // then we'll process the notificiations & save the registration with the updated
