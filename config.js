@@ -5,7 +5,7 @@ config.port = process.env.PORT || 3000;
 
 // The time before the system begins the update loop to push out notifications
 // This time is in milliseconds and should be enough to give GitHub some room to breath
-config.updateTime = 1000 * 60 * 5;
+config.updateTime = 1000 * 60 * 1;
 
 // The mongo address where the database is kept
 config.mongodb = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || process.env.MONGODB;
@@ -33,3 +33,9 @@ config.push.feedbackGateway = 'feedback.sandbox.push.apple.com';
 
 // Time before we inquire about feedback, in seconds
 config.push.feedbackInterval = 300;
+
+// The cert.pem contents
+config.push.cert = process.env.CERT;
+
+// The key.pem contents
+config.push.key = process.env.KEY;

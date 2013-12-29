@@ -1,7 +1,7 @@
 var apn = require('apn');
 var config = require('../config');
 
-var service = new apn.connection({ gateway: config.push.serviceGateway, cert: __dirname + '/cert.pem', key: __dirname + '/key.pem' });
+var service = new apn.connection({ gateway: config.push.serviceGateway, certData: config.push.cert, keyData: config.push.key });
 var feedback = new apn.feedback({ address: config.push.feedbackGateway, interval: config.push.feedbackInterval, batchFeedback: true });
 
 feedback.on('feedback', function(feedbackData) {
