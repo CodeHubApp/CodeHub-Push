@@ -1,5 +1,7 @@
-var apn = require('apn');
-var config = require('../config');
+var kue     = require('kue'),
+    jobs    = kue.createQueue({ disableSearch: true }),
+    apn     = require('apn'),
+    config  = require('../config');
 
 var service = new apn.connection({ gateway: config.push.serviceGateway, certData: config.push.cert, keyData: config.push.key });
 var feedback = new apn.feedback({ address: config.push.feedbackGateway, interval: config.push.feedbackInterval, batchFeedback: true });
@@ -39,7 +41,7 @@ service.on('disconnected', function() {
 service.on('socketError', console.error);
 
 // Send a push notification!
-exports.send = function(tokens, badge, msg, payload) {
+function send(tokens, badge, msg, payload) {
     var data = new apn.Notification();
     //data.badge = badge;
     data.alert = msg;
@@ -48,3 +50,8 @@ exports.send = function(tokens, badge, msg, payload) {
     service.pushNotification(data, tokens)
 };
 
+// Process 100 push jobs at a time
+jobs.process('push', config.push.activeJobs, function(job, done) {
+    send(job.data.tokens, job.data.badge, job.data.msg, job.data.payload);
+    done();
+});

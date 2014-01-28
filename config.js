@@ -3,12 +3,8 @@ var config = exports;
 // The port to listen on for connections
 config.port = process.env.PORT || 3000;
 
-// The time before the system begins the update loop to push out notifications
-// This time is in milliseconds and should be enough to give GitHub some room to breath
-config.updateTime = 1000 * 60 * 1;
-
 // The mongo address where the database is kept
-config.mongodb = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || process.env.MONGODB;
+config.mongodb = 'mongodb://codehub-push:codehub-push@ds049848.mongolab.com:49848/github-push'; //process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || process.env.MONGODB;
 
 // The amount of registrations to process at any given time
 config.registrationBatch = 5;
@@ -39,3 +35,6 @@ config.push.cert = process.env.CERT;
 
 // The key.pem contents
 config.push.key = process.env.KEY;
+
+// The number of active jobs when taking tasks off redis for APN processing
+config.push.activeJobs = 100;
