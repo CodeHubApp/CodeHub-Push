@@ -40,10 +40,12 @@ function processRegistration(reg, callback) {
             var total = results.length;
             var tasks = _.map(results, function(entry) {
                 return function(callback) {
-                    github.process(reg.oauth, reg.lastUpdated, entry, function(err, msg) {
-                        push(reg.tokens, 0, msg, {u: reg.username, r: entry.repository.full_name});
-                        //console.log('awesome!');
-                        callback(err);
+                    github.process(reg.oauth, reg.updated_at, entry, function(err, msg, data) {
+                        if (err) return callback(err);
+                        if (msg === undefined) return callback(null);
+
+                        push(reg.tokens, 0, msg, _.extend({u: reg.username, r: entry.repository.full_name}, data));
+                        callback(null);
                     });
                 };
             });

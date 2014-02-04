@@ -70,7 +70,7 @@ exports.process = function(oauth, lastUpdated, notification, callback) {
     // However, we don't want to use the 'since' tag since we need to see
     // how many are still in the notifications queue.
     if (new Date(notification.updated_at) < lastUpdated) {
-        callback();
+        return callback(null);
     }
 
     var detailCallback = function(err, body, newEtag) {
@@ -82,20 +82,24 @@ exports.process = function(oauth, lastUpdated, notification, callback) {
             var created = notification.subject.url === notification.subject.latest_comment_url;
             var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
             var msg = body.user.login + (created ? ' opened' : ' commented on');
+            var data = {};
 
             if (notification.subject.type === 'Issue') {
                 msg += ' issue';
                 msg += ' ' + notification.repository.full_name + '#' + num;
+                data['i'] = num;
             } else if (notification.subject.type === 'PullRequest') {
                 msg += ' pull request';
                 msg += ' ' + notification.repository.full_name + '#' + num;
+                data['p'] = num; 
             } else if (notification.subject.type === 'Commit') {
                 num = num.substring(0, 6);
                 msg += ' commit';
                 msg += ' ' + notification.repository.full_name + '@' + num;
+                data['c'] = num;
             }
 
-            callback(null, msg);
+            callback(null, msg, data);
         } catch (err) {
             callback(err);
         }
