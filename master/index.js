@@ -77,7 +77,9 @@ function workQueueLength(callback) {
 }
 
 queue2.process(function(task, cb) {
-    console.log(task);
+    for (var msg in task.messages) {
+        send(task.tokens, 0, msg.msg, msg.data);
+    }
 
     db.updateEtagAndUpdatedAt(task.oauth, task.etag, task.updated_at, function() {
         cb(null);
