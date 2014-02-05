@@ -1,67 +1,107 @@
-// Bring Mongoose into the app
-var mongoose = require( 'mongoose' );
 var config = require('../config');
+var mysql = require('mysql');
 
-// We want to set everything in UTC
-var time = require('time');
-
-// Build the connection string
-var dbURI = config.mongodb;
-
-// Create the database connection
-mongoose.connect(dbURI);
-
-// CONNECTION EVENTS
-// When successfully connected
-mongoose.connection.on('connected', function () {
-  console.log('Mongoose default connection open to ' + dbURI);
+var connectionPool = mysql.createPool({
+    host: 'localhost',
+    user: config.db.user,
+    password: config.db.pass,
+    database: 'codehub_push'
 });
 
-// If the connection throws an error
-mongoose.connection.on('error',function (err) {
-  console.log('Mongoose default connection error: ' + err);
-});
+exports.insertRegistration = function(token, auth, user, cb) {
+    connectionPool.getConnection(function(err, connection) {
+        if (err) return cb(err);
 
-// When the connection is disconnected
-mongoose.connection.on('disconnected', function () {
-  console.log('Mongoose default connection disconnected');
-});
+        var callback = function(error, value) {
+            connection.release();
+            cb(error, value);
+        };
 
-// If the Node process ends, close the Mongoose connection
-process.on('SIGINT', function() {
-  mongoose.connection.close(function () {
-    console.log('Mongoose default connection disconnected through app termination');
-    process.exit(0);
-  });
-});
+        connection.query('select 1 from records where token = ? and oauth = ?', [token, auth], function(err, results) {
+            if (err) return callback(err);
+            if (results.length > 0) return callback(null, false);
 
-// Define a registration schema we'll use in the database
-var registrationSchema = mongoose.Schema({
-    // This will keep a list of all the devices attached to a specific GitHub account
-    // This way, we can query once and send to multiple devices. It's a nice way be efficient about
-    // how many times we query GitHub and attempt to reduce the amount of transactions.
-    tokens: [String], 
-    // Keep the oauth for the user so we can query in his/her identity
-    oauth: { type: String, required: true, trim: true },
-    // Keep the username too since we'll need to launch the app in that person's context
-    username: { type: String, required: true, trim: true },
-    // ETag for super efficiency
-    etag: String,
-    // Date's just for the sake of dates
-    created_at: Date,
-    updated_at: Date
-});
+            connection.query('insert into records (token, oauth, username) values (?, ?, ?)', [token, auth, user], function(err, results) {
+                if (err) return callback(err);
+                callback(null, true);
+            });
+        });
+    });
+};
 
-// Update the created_at and updated_at during saves
-registrationSchema.pre('save', function(next) {
-    var d = new time.Date();
-    d.setTimezone('UTC');
-    this.updated_at = d;
-    if (!this.created_at) {
-        this.created_at = d;
-    }
-    next();
-});
+exports.removeRegistration = function(token, auth, cb) {
+    connectionPool.getConnection(function(err, connection) {
+        if (err) return cb(err);
 
-// Export the object
-exports.Registration = mongoose.model('Registration', registrationSchema);
+        var callback = function(error, value) {
+            connection.release();
+            cb(error, value);
+        };
+
+        connection.query('delete from records where token = ? and oauth = ?', [token, auth], function(err, result) {
+            if (err) return callback(err);
+            callback(null, results.affectedRows > 0);
+        });
+    });
+};
+
+
+exports.getRegistrations = function(callback, resultCallback) {
+    connectionPool.getConnection(function(err, connection) {
+        if (err) return callback(err);
+        connection.query('select group_concat(token) as tokens, oauth, username, etag, updated_at from records group by oauth')
+        .on('error', function(err) {
+            callback(err);
+        }).on('result', function(row) {
+            resultCallback(row);
+        }).on('end', function() {
+            connection.release();
+            callback(null);
+        });
+    });
+};
+
+exports.removeExpiredRegistration = function(token, cb) {
+    connectionPool.getConnection(function(err, connection) {
+        if (err) return cb(err);
+        var callback = function(error, value) {
+            connection.release();
+            cb(error, value);
+        };
+
+        connection.query('delete from records where token = ?', token, function(err, result) {
+           if (err) return callback(err);
+            callback(null, result.affectedRows > 0);
+        });
+    });
+};
+
+exports.isRegistered = function(token, oauth, cb) {
+    connectionPool.getConnection(function(err, connection) {
+        if (err) return cb(err);
+        var callback = function(error, value) {
+            connection.release();
+            cb(error, value);
+        };
+
+        connection.query('select 1 from records where token = ? and oauth = ?', [token, oauth], function(err, results) {
+            if (err) return callback(err);
+            callback(null, results.length > 0);
+        });
+    });
+}
+
+exports.updateEtagAndUpdatedAt = function(oauth, etag, updated_at, cb) {
+    connectionPool.getConnection(function(err, connection) {
+        if (err) return cb(err);
+        var callback = function(error, value) {
+            connection.release();
+            cb(error, value);
+        };
+
+        connection.query('update records set etag = ?, updated_at = ?', [etag, updated_at], function(err, result) {
+            if (err) return callback(err);
+            callback(null, result.affectedRows > 0);
+        });
+    });
+};

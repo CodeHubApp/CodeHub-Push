@@ -13,6 +13,8 @@
     "underscore": "*",
     "time": "*",
     "request": "*",
-    "kue": "*"
+    "mysql": "*",
+    "redisq": "*",
+    "redis": "*"
   }
 }
