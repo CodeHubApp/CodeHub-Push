@@ -69,7 +69,11 @@ exports.process = function(oauth, lastUpdated, notification, callback) {
     // We don't care about things that we already sent in the past
     // However, we don't want to use the 'since' tag since we need to see
     // how many are still in the notifications queue.
-    if (new Date(notification.updated_at) < lastUpdated) {
+    var date = new Date(notification.updated_at);
+    date.setTimezone('UTC');
+    console.log('comparing: ' + date + ' < ' + lastUpdated);
+    if (date < lastUpdated) {
+	console.log('true!');
         return callback(null);
     }
 

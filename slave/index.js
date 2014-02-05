@@ -9,7 +9,7 @@ redisq.options(config.redisq.options);
 
 var queue = redisq.queue('process'),
     queue2 = redisq.queue('push');
-    concurency = 10;
+    concurency = 5;
 queue.retry = false;
 queue2.retry = false;
 

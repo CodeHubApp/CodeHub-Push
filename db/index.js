@@ -5,7 +5,8 @@ var connectionPool = mysql.createPool({
     host: 'localhost',
     user: config.db.user,
     password: config.db.pass,
-    database: 'codehub_push'
+    database: 'codehub_push',
+    timezone: 'Z'
 });
 
 exports.insertRegistration = function(token, auth, user, cb) {

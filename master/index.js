@@ -77,8 +77,8 @@ function workQueueLength(callback) {
 }
 
 queue2.process(function(task, cb) {
-    for (var msg in task.messages) {
-        send(task.tokens, 0, msg.msg, msg.data);
+    for (var i = 0; i < task.messages.length; i++) {
+        send(task.tokens, 0, task.messages[i].msg, task.messages[i].data);
     }
 
     db.updateEtagAndUpdatedAt(task.oauth, task.etag, task.updated_at, function() {
@@ -96,13 +96,12 @@ function registrationLoop(callback) {
             }
         },
         function(row) {
-            //console.log(row);
             queue.push({
                 tokens: row.tokens.split(','),
                 oauth: row.oauth,
                 username: row.username,
                 etag: row.etag,
-                updated_at: row.updated_at
+                updated_at: new Date(row.updated_at)
             });
     });
 }
