@@ -1,6 +1,6 @@
 var express = require('express')
   , http = require('http')
-  , db = require('../db')
+  , db = require('../lib/db')
   , config = require('../config');
 
 var app = express();
