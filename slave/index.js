@@ -24,14 +24,14 @@ queue.process(function(task, cb) {
         cb(err);
     };
 
-    misc.processRegistration(task.oauth, task.etag, task.updated_at, task.username, function(err, newEtag, updated_at, results) {
+    misc.processRegistration(task.oauth, task.etag, new Date(task.updated_at), task.username, function(err, newEtag, updated_at, results) {
        if (err) return done(err);
         if (results === undefined || results.length == 0) return done();
         queue2.push({
             tokens: task.tokens,
             oauth: task.oauth,
             etag: newEtag,
-            updated_at: updated_at,
+            updated_at: updated_at.getTime(),
             messages: results
         });
         done();

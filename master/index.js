@@ -29,7 +29,7 @@ queue2.process(function(task, cb) {
         push.send(task.tokens, task.messages[i].msg, task.messages[i].data);
     }
 
-    db.updateEtagAndUpdatedAt(task.oauth, task.etag, task.updated_at, function() {
+    db.updateEtagAndUpdatedAt(task.oauth, task.etag, new Date(task.updated_at), function() {
         cb(null);
     })
 })
@@ -49,7 +49,7 @@ function registrationLoop(callback) {
                 oauth: row.oauth,
                 username: row.username,
                 etag: row.etag,
-                updated_at: new Date(row.updated_at)
+                updated_at: Date.parse(row.updated_at)
             });
     });
 }
