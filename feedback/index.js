@@ -1,6 +1,7 @@
 var   apn    = require('apn')
     , async  = require('async')
     , db     = require('../lib/db')
+    , _      = require('underscore')
     , config = require('../config');
 
 var feedback = new apn.feedback({ address: config.push.feedbackGateway, interval: config.push.feedbackInterval, batchFeedback: true });
@@ -8,22 +9,17 @@ var feedback = new apn.feedback({ address: config.push.feedbackGateway, interval
 feedback.on('feedbackError', console.error);
 
 feedback.on('feedback', function(feedbackData) {
-    var time, device;
-    var tasks = [];
-    for(var i in feedbackData) {
-        time = feedbackData[i].time;
-        device = feedbackData[i].device;
-
-        tasks.push(function(callback) {
-            console.log('device ' + device + ' has been unresponsive since ' + time);
-            db.removeExpiredRegistration(device, function(err) {
+    var tasks = _.map(feedbackData, function(i) {
+        return function(callback) {
+            console.log('device %s has been unresponsive since %s', i.device, i.time);
+            db.removeExpiredRegistration(i.device, function(err) {
                 if (err) console.err(err);
                 callback(null);
             })
+        };
+    });
 
-        });
-    }
-
+    console.log('Feedback service reports %s unresponsive devices', feedbackData.length);
     async.parallelLimit(tasks, 3);
 });
 

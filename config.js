@@ -12,20 +12,6 @@ config.db.user = process.env.DBUSER;
 // The database password
 config.db.pass = process.env.DBPASS;
 
-// Redisq things
-config.redisq = {};
-
-// The frontend port for redisq
-config.redisq.frontendPort = process.env.REDISQ_PORT || 3001;
-
-// Options for redisq
-config.redisq.options = {
-    redis: {
-        host: 'localhost',
-        port: 6379
-    }
-};
-
 // The amount of registrations to process at any given time
 config.registrationBatch = 5;
 

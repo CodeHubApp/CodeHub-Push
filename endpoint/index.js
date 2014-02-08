@@ -1,13 +1,15 @@
 var express = require('express')
   , http = require('http')
+  , async = require('async')
   , db = require('../lib/db')
+  , github = require('../lib/github')
   , config = require('../config');
 
 var app = express();
 app.set('port', config.port);
-app.use(express.favicon());
-app.use(express.logger('dev'));
 app.use(express.bodyParser());
+express.logger.token('body', function(req, res) { return JSON.stringify(req.body) });
+app.use(express.logger(':method :status - :url :body'));
 app.use(express.methodOverride());
 app.use(app.router);
 
@@ -16,35 +18,51 @@ if ('development' == app.get('env')) {
     app.use(express.errorHandler());
 }
 
-app.get('/', function(req, res) {
-    res.send(200);
-    res.end();
-});
-
 app.post('/unregister', function(req, res) {
-    db.removeRegistration(req.body.token, req.body.oauth,
-        function(err, found) {
-            if (err) {
-                console.error(err);
-                return res.send(500).end();
-            }
-            res.send(found ? 200 : 404).end();
+    var token  = req.body.token;
+    var oauth  = req.body.oauth;
+    var domain = req.body.domain;
+
+    db.removeRegistration(token, oauth, domain, function(err, found) {
+        if (err) {
+            console.error(err);
+            return res.send(500).end();
+        }
+
+        res.send(found ? 200 : 404).end();
     });
 });
 
 app.post('/register', function(req, res) {
-    db.insertRegistration(req.body.token, req.body.oauth, req.body.user,
-        function(err, inserted) {
+    var token  = req.body.token;
+    var oauth  = req.body.oauth;
+    var user   = req.body.user;
+    var domain = req.body.domain;
+
+    var client = new github.Client(domain, oauth, user);
+    client.notifications(null, function(err) {
+        if (err) {
+            console.error(err);
+            return res.json(400, { error: err.message }).end();
+        }
+
+        db.insertRegistration(token, oauth, user, domain, function(err, inserted) {
             if (err) {
                 console.error(err);
                 return res.send(500).end();
             }
+
             res.send(inserted ? 200 : 409).end();
+        });
     });
 });
 
-app.get('/registered', function(req, res) {
-    db.isRegistered(req.query.token, req.query.oauth, function(err, isRegistered) {
+app.post('/registered', function(req, res) {
+    var token  = req.body.token;
+    var oauth  = req.body.oauth;
+    var domain = req.body.domain;
+
+    db.isRegistered(token, oauth, domain, function(err, isRegistered) {
         if (err) return res.send(500).end();
         if (isRegistered) {
             res.send(200).end();
@@ -57,7 +75,3 @@ app.get('/registered', function(req, res) {
 http.createServer(app).listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
 });
-
-//frontend.listen(config.redisq.frontendPort, 'localhost', config.redisq.options, function() {
-//    console.log("Redisq frontend running on port " + config.redisq.frontendPort);
-//});
