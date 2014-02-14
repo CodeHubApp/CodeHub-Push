@@ -27,16 +27,25 @@ function processRecord(record, callback) {
     misc.processRegistration(client, updatedDate, function(err, lastModified, results) {
         if (err) {
             console.error(err);
-            return callback();
+            if (err.message === 'Bad credentials') {
+                console.error('Removing %s at %s for bad credentials', record.oauth, record.domain);
+                return db.removeBadAuth(record.oauth, record.domain, function() {
+                    callback();
+                });
+            }
+            else {
+                return callback();
+            }
         }
+
         if (results === undefined || results.length == 0) {
             console.log('No notifications for %s', record.username);
             return callback();
         }
 
         _.each(results, function(result) {
-            console.log('pushing to %s: %s', record.tokens, result.msg);
-            //push.send(record.tokens.split(','), result.msg, result.data);
+            //console.log('pushing to %s: %s', record.tokens, result.msg);
+            push.send(record.tokens.split(','), result.msg, result.data);
         });
 
         db.updateUpdatedAt(record.oauth, record.domain, lastModified, function(err) {
