@@ -23,4 +23,4 @@ feedback.on('feedback', function(feedbackData) {
     async.parallelLimit(tasks, 3);
 });
 
-console.log('Started listening for APN feedback: ' + new Date().toString());
+console.log('Started listening for APN feedback on %s at %s', config.push.feedbackGateway, new Date().toString());

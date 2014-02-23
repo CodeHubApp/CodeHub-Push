@@ -18,6 +18,12 @@ if ('development' == app.get('env')) {
     app.use(express.errorHandler());
 }
 
+app.get('/in-app', function(req, res) {
+    res.json(200, [
+        'com.dillonbuchanan.codehub.push'
+    ]).end();
+});
+
 app.post('/unregister', function(req, res) {
     var token  = req.body.token;
     var oauth  = req.body.oauth;
