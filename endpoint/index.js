@@ -20,7 +20,7 @@ if ('development' == app.get('env')) {
 
 app.get('/in-app', function(req, res) {
     res.json(200, [
-//        'com.dillonbuchanan.codehub.push'
+        'com.dillonbuchanan.codehub.push'
     ]).end();
 });
 
