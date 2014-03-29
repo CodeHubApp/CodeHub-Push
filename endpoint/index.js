@@ -9,7 +9,7 @@ var app = express();
 app.set('port', config.port);
 app.use(express.bodyParser());
 express.logger.token('body', function(req, res) { return JSON.stringify(req.body) });
-app.use(express.logger(':method :status - :url :body'));
+app.use(express.logger('[:date] :remote-addr - :method :status - :url :body'));
 app.use(express.methodOverride());
 app.use(app.router);
 
@@ -20,7 +20,7 @@ if ('development' == app.get('env')) {
 
 app.get('/in-app', function(req, res) {
     res.json(200, [
-        'com.dillonbuchanan.codehub.push'
+//        'com.dillonbuchanan.codehub.push'
     ]).end();
 });
 
