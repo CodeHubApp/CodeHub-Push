@@ -1,12 +1,12 @@
 var  _       = require('underscore'),
     async   = require('async'),
     db      = require('../lib/db'),
-    config  = require('../config'),
     github  = require('../lib/github'),
     misc    = require('../lib/misc'),
-    apn     = require('../lib/apn');
+    Apn     = require('./apn').Apn;
 
-var push = new apn.Push();
+// Contains logic for sending and receiving feedback for Apple's Push Notifications
+var apn = new Apn();
 
 /**
  * Process a record
@@ -44,8 +44,8 @@ function processRecord(record, callback) {
         }
 
         _.each(results, function(result) {
-            //console.log('pushing to %s: %s', record.tokens, result.msg);
-            push.send(record.tokens.split(','), result.msg, result.data);
+            console.log('pushing to %s: %s', record.tokens, result.msg);
+            //apn.send(record.tokens.split(','), result.msg, result.data);
         });
 
         db.updateUpdatedAt(record.oauth, record.domain, lastModified, function(err) {
@@ -71,18 +71,26 @@ function registrationLoop(callback) {
         });
 }
 
-var main = function() {
+function main() {
     var timeStart = new Date();
     console.log('Staring update loop at %s', timeStart.toString());
     registrationLoop(function(tasks) {
-        console.log('There are %s tasks to complete...', tasks.length);
+        var numberOfTasks = tasks.length;
+        console.log('There are %s tasks to complete...', numberOfTasks);
         async.parallelLimit(tasks, 5, function() {
             var timeEnd = new Date();
             var diff = timeEnd - timeStart;
-            console.log('%s tasks complete in %s minutes', tasks.length, (diff / 1000 / 60).toFixed(2));
-            setTimeout(main, 1000 * 60);
+            db.logUpdateCycle(timeStart, timeEnd, numberOfTasks, function() {
+                console.log('updated in database!');
+            })
+            console.log('%s tasks complete in %s minutes', numberOfTasks, (diff / 1000 / 60).toFixed(2));
+            mainTimer();
         })
     });
+}
+
+function mainTimer() {
+    setTimeout(main, 1000 * 60);
 }
 
 // Welcome!

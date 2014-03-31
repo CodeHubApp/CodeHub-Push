@@ -1,0 +1,61 @@
+doctype html
+html
+    head
+        title CodeHub Push Notifications
+        link(href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css', rel='stylesheet')
+        link(href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css', rel='stylesheet')
+        link(href='/public/stylesheets/style.css', rel='stylesheet')
+    body
+        .container
+            .row
+                .col-md-12
+                    .banner
+                        img.icon(src='/public/assets/icon.png')
+                        h2 CodeHub Push Notifications
+                    hr
+                    h4 What am I looking at?
+                    p.
+                        You are currently looking at the live statistics for the CodeHub Push notification system. This page
+                        serves as a window into the operation of the polling mechanism and push notification code required
+                        to pull events from GitHub and send them to Apple. In addition, I was tired of logging
+                        into the box to see the status of the server.
+                    hr
+            .row
+                .col-md-4
+                    .panel.panel-default
+                        .panel-heading Last Update Cycle
+                        .panel-body !{locals.stats.last_update_cycle}
+                .col-md-4
+                    .panel.panel-default
+                        .panel-heading Last Cycle Length
+                        .panel-body !{locals.stats.last_update_cycle_duration} seconds
+                .col-md-4
+                    .panel.panel-default
+                        .panel-heading Last Task Count
+                        .panel-body !{locals.stats.last_update_cycle_tasks} tasks
+            .row
+                .col-md-12
+                    .panel.panel-default
+                        .panel-heading User Count
+                        .panel-body
+                            canvas(id="user-count", height='150')
+            .row
+                .col-md-12
+                    .panel.panel-default
+                        .panel-heading Update Cycle Durations
+                        .panel-body
+                            canvas(id='cycle-duration', height='150')
+            .row
+                .col-md-12
+                    .panel.panel-default
+                        .panel-heading Polling Time
+                        .panel-body
+                            canvas(id="poll-times2", height="200")
+        script(src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js')
+        script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js')
+        script(src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js')
+        script(src='//cdnjs.cloudflare.com/ajax/libs/Chart.js/0.2.0/Chart.min.js')
+        script(src='//cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js')
+        script(src='/public/javascript/index.js')
+        script(type='text/javascript').
+            window.stats = !{JSON.stringify(locals.stats)};
