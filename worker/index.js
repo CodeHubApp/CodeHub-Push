@@ -26,7 +26,7 @@ function processRecord(record, callback) {
 
     misc.processRegistration(client, updatedDate, function(err, lastModified, results) {
         if (err) {
-            console.error(err);
+            console.error('Error procesing registrations: %s - %s', err, err.stack);
             if (err.message === 'Bad credentials') {
                 console.error('Removing %s at %s for bad credentials', record.oauth, record.domain);
                 return db.removeBadAuth(record.oauth, record.domain, function() {
@@ -34,19 +34,19 @@ function processRecord(record, callback) {
                 });
             }
             else {
-                return callback();
+                results = [];
+                lastModified = new Date();
             }
         }
 
         if (results === undefined || results.length == 0) {
             console.log('No notifications for %s', record.username);
-            return callback();
+        } else {
+            _.each(results, function(result) {
+                //console.log('pushing to %s: %s', record.tokens, result.msg);
+                push.send(record.tokens.split(','), result.msg, result.data);
+            });
         }
-
-        _.each(results, function(result) {
-            //console.log('pushing to %s: %s', record.tokens, result.msg);
-            push.send(record.tokens.split(','), result.msg, result.data);
-        });
 
         db.updateUpdatedAt(record.oauth, record.domain, lastModified, function(err) {
             if (err) console.error(err);
