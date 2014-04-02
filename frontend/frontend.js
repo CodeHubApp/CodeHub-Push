@@ -6,11 +6,6 @@ var express = require('express')
 
 var app = express();
 app.set('port', config.port);
-app.set('port', process.env.PORT || 3000);
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-app.use(express.favicon());
-app.use('/public', express.static('public'));
 app.use(express.bodyParser());
 express.logger.token('body', function(req) { return JSON.stringify(req.body) });
 app.use(express.logger('[:date] :remote-addr - :method :status - :url :body'));
@@ -22,7 +17,6 @@ if ('development' == app.get('env')) {
     app.use(express.errorHandler());
 }
 
-app.get('/', routes.index);
 app.get('/in-app', routes.features);
 app.post('/register', routes.registration.register);
 app.post('/registered', routes.registration.registered);

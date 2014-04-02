@@ -12,8 +12,6 @@
     "underscore": "*",
     "time": "*",
     "request": "*",
-    "mysql": "*",
-    "jade": "*",
-    "moment": "*"
+    "mysql": "*"
   }
 }

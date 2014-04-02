@@ -14,15 +14,3 @@ CREATE TABLE IF NOT EXISTS records (
 );
 
 ALTER TABLE records ADD INDEX (oauth);
-
-CREATE TABLE IF NOT EXISTS update_cycles (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    row_id int(11) NOT NULL UNIQUE KEY,
-    started_at timestamp NOT NULL,
-    ended_at timestamp NOT NULL,
-    tasks smallint unsigned NOT NULL,
-    PRIMARY KEY (id)
-);
-
-ALTER TABLE update_cycles ADD INDEX (started_at);
-ALTER TABLE update_cycles ADD INDEX (ended_at);
