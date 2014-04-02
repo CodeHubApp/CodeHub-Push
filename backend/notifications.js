@@ -56,11 +56,9 @@ function processNotification(client, notification, callback) {
  * @param lastModified The date the last request was updated
  * @param callback The callback
  */
-module.exports.processRegistration = function(client, lastModified, callback) {
+exports.processNotifications = function(client, lastModified, callback) {
     var notificationCallback = function(err, results, lastModified) {
         if (err) return callback(err);
-
-        //results = _.reject(results, function(i) { return new Date(i.updated_at) < updated_at; });
 
         var tasks = _.map(results, function(entry) {
             return function(callback) {

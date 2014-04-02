@@ -2,11 +2,29 @@ var  _       = require('underscore'),
     async   = require('async'),
     db      = require('../lib/db'),
     github  = require('../lib/github'),
-    misc    = require('../lib/misc'),
+    config  = require('../config'),
+    notify  = require('./notifications'),
     Apn     = require('./apn').Apn;
 
 // Contains logic for sending and receiving feedback for Apple's Push Notifications
-var apn = new Apn();
+var apn = new Apn(config.push.serviceGateway, config.push.feedbackGateway, config.push.cert, config.push.key);
+
+// Do something on feedback from APN service
+apn.feedback.on('feedback', function(feedbackData) {
+    var tasks = _.map(feedbackData, function(i) {
+        return function(callback) {
+            console.log('device %s has been unresponsive since %s', i.device, i.time);
+            db.removeExpiredRegistration(i.device, function(err) {
+                if (err) console.err(err);
+                callback(null);
+            })
+        };
+    });
+
+    console.log('Feedback service reports %s unresponsive devices', feedbackData.length);
+    async.series(tasks);
+});
+
 
 /**
  * Process a record
@@ -24,9 +42,10 @@ function processRecord(record, callback) {
         updatedDate = new Date(updatedDate);
     }
 
-    misc.processRegistration(client, updatedDate, function(err, lastModified, results) {
+    notify.processNotifications(client, updatedDate, function(err, lastModified, results) {
         if (err) {
-            console.error(err);
+            console.error('Error procesing registrations: %s - %s', err, err.stack);
+
             if (err.message === 'Bad credentials') {
                 console.error('Removing %s at %s for bad credentials', record.oauth, record.domain);
                 return db.removeBadAuth(record.oauth, record.domain, function() {
@@ -34,19 +53,19 @@ function processRecord(record, callback) {
                 });
             }
             else {
-                return callback();
+                results = [];
+                lastModified = new Date();
             }
         }
 
         if (results === undefined || results.length == 0) {
             console.log('No notifications for %s', record.username);
-            return callback();
+        } else {
+            _.each(results, function(result) {
+                //console.log('pushing to %s: %s', record.tokens, result.msg);
+                apn.send(record.tokens.split(','), result.msg, result.data);
+            });
         }
-
-        _.each(results, function(result) {
-            console.log('pushing to %s: %s', record.tokens, result.msg);
-            //apn.send(record.tokens.split(','), result.msg, result.data);
-        });
 
         db.updateUpdatedAt(record.oauth, record.domain, lastModified, function(err) {
             if (err) console.error(err);
@@ -77,6 +96,7 @@ function main() {
     registrationLoop(function(tasks) {
         var numberOfTasks = tasks.length;
         console.log('There are %s tasks to complete...', numberOfTasks);
+
         async.parallelLimit(tasks, 5, function() {
             var timeEnd = new Date();
             var diff = timeEnd - timeStart;

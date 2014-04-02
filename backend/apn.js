@@ -1,11 +1,10 @@
 var apn     = require('apn'),
     db      = require('../lib/db'),
-    async   = require('async'),
-    config  = require('../config');
+    async   = require('async');
 
-function Apn() {
-    this.service = new apn.connection({ gateway: config.push.serviceGateway, certData: config.push.cert, keyData: config.push.key });
-    this.feedback = new apn.feedback({ address: config.push.feedbackGateway, interval: config.push.feedbackInterval, batchFeedback: true });
+function Apn(apnAddress, feedbackAddress, certData, keyData) {
+    this.service = new apn.connection({ address: apnAddress, certData: certData, keyData: keyData });
+    this.feedback = new apn.feedback({ address: feedbackAddress, certData: certData, keyData: keyData });
 
     this.service.on('connected', function() {
         console.log("APN Connected");
@@ -25,21 +24,6 @@ function Apn() {
 
     this.service.on('disconnected', function() {
         console.log("Disconnected from APN");
-    });
-
-    this.feedback.on('feedback', function(feedbackData) {
-        var tasks = _.map(feedbackData, function(i) {
-            return function(callback) {
-                console.log('device %s has been unresponsive since %s', i.device, i.time);
-                db.removeExpiredRegistration(i.device, function(err) {
-                    if (err) console.err(err);
-                    callback(null);
-                })
-            };
-        });
-
-        console.log('Feedback service reports %s unresponsive devices', feedbackData.length);
-        async.series(tasks);
     });
 
     this.service.on('socketError', console.error);

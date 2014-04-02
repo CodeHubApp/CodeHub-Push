@@ -55,10 +55,3 @@ config.push = {};
 //    // The key.pem contents
 //    config.push.key = fs.readFileSync(__dirname + '/certs/key.development.pem');
 //}
-
-
-// Time before we inquire about feedback, in seconds
-config.push.feedbackInterval = 300;
-
-// The number of active jobs when taking tasks off redis for APN processing
-config.push.activeJobs = 100;
