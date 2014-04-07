@@ -58,9 +58,7 @@ function processRecord(record, callback) {
             }
         }
 
-        if (results === undefined || results.length == 0) {
-            console.log('No notifications for %s', record.username);
-        } else {
+        if (results !== undefined && results.length > 0) {
             _.each(results, function(result) {
                 //console.log('pushing to %s: %s', record.tokens, result.msg);
                 apn.send(record.tokens.split(','), result.msg, result.data);
@@ -100,9 +98,6 @@ function main() {
         async.parallelLimit(tasks, 5, function() {
             var timeEnd = new Date();
             var diff = timeEnd - timeStart;
-            db.logUpdateCycle(timeStart, timeEnd, numberOfTasks, function() {
-                console.log('updated in database!');
-            })
             console.log('%s tasks complete in %s minutes', numberOfTasks, (diff / 1000 / 60).toFixed(2));
             mainTimer();
         })
