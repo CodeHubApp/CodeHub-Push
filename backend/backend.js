@@ -4,10 +4,23 @@ var  _       = require('underscore'),
     github  = require('../lib/github'),
     config  = require('../config'),
     notify  = require('./notifications'),
-    Apn     = require('./apn').Apn;
+    Apn     = require('./apn').Apn,
+    raven   = require('raven');
 
 // Contains logic for sending and receiving feedback for Apple's Push Notifications
 var apn = new Apn(config.push.serviceGateway, config.push.feedbackGateway, config.push.cert, config.push.key);
+
+// Configure Raven for error reporting
+var client = new raven.Client(config.raven);
+
+// Install unhandled exception handler
+client.patchGlobal();
+
+// A method to report errors
+function reportError(err) {
+    raven.captureError(err);
+    console.err(err);
+}
 
 // Do something on feedback from APN service
 apn.feedback.on('feedback', function(feedbackData) {
@@ -15,7 +28,7 @@ apn.feedback.on('feedback', function(feedbackData) {
         return function(callback) {
             console.log('device %s has been unresponsive since %s', i.device, i.time);
             db.removeExpiredRegistration(i.device, function(err) {
-                if (err) console.err(err);
+                if (err) reportError(err);
                 callback(null);
             })
         };
@@ -66,7 +79,7 @@ function processRecord(record, callback) {
         }
 
         db.updateUpdatedAt(record.oauth, record.domain, lastModified, function(err) {
-            if (err) console.error(err);
+            if (err) reportError(err);
             callback();
         });
     });
@@ -78,7 +91,7 @@ function registrationLoop(callback) {
     db.getRegistrations(
         function(err) {
             if (err) {
-                console.error(err)
+                reportError(err);
             } else {
                 callback(tasks);
             }

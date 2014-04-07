@@ -12,6 +12,7 @@
     "underscore": "*",
     "time": "*",
     "request": "*",
-    "mysql": "*"
+    "mysql": "*",
+    "raven": "*"
   }
 }

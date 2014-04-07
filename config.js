@@ -4,6 +4,9 @@ var config = exports;
 // The port to listen on for connections
 config.port = process.env.PORT || 3000;
 
+// Raven support for error reporting
+config.raven = process.env.RAVEN;
+
 // Database things
 config.db = {}
 
