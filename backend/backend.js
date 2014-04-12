@@ -1,29 +1,70 @@
-var  _       = require('underscore'),
+var  _      = require('underscore'),
+    fs      = require('fs'),
     async   = require('async'),
     db      = require('../lib/db'),
     github  = require('../lib/github'),
-    config  = require('../config'),
     notify  = require('./notifications'),
-    Apn     = require('./apn').Apn,
+    apn     = require('apn'),
     raven   = require('raven');
 
-// Contains logic for sending and receiving feedback for Apple's Push Notifications
-var apn = new Apn(config.push.serviceGateway, config.push.feedbackGateway, config.push.cert, config.push.key);
-
 // Configure Raven for error reporting
-var client = new raven.Client(config.raven);
+var ravenClient = new raven.Client(process.env['RAVEN']);
 
 // Install unhandled exception handler
-client.patchGlobal();
+ravenClient.patchGlobal();
 
 // A method to report errors
 function reportError(err) {
-    raven.captureError(err);
+    ravenClient.captureError(err);
     console.err(err);
 }
 
+// determine values for these based on environment mode
+var apnServiceGateway, apnFeedbackGateway, apnCert, apnKey;
+
+if (process.env.NODE_ENV === 'production') {
+    apnServiceGateway = 'gateway.push.apple.com';
+    apnFeedbackGateway = 'feedback.push.apple.com';
+    apnCert = fs.readFileSync(__dirname + '/certs/cert.production.pem');
+    apnKey = fs.readFileSync(__dirname + '/certs/key.production.pem');
+}
+else {
+    apnServiceGateway = 'gateway.sandbox.push.apple.com';
+    apnFeedbackGateway = 'feedback.sandbox.push.apple.com';
+    apnCert = fs.readFileSync(__dirname + '/certs/cert.development.pem');
+    apnKey = fs.readFileSync(__dirname + '/certs/key.development.pem');
+}
+
+// Instantiate the APN service mechanisms
+var apnService = new apn.connection({ address: apnServiceGateway, certData: apnCert, keyData: apnKey });
+var apnFeedback = new apn.feedback({ address: apnFeedbackGateway, certData: apnCert, keyData: apnKey });
+
+apnService.on('connected', function() {
+    console.log("APN Connected");
+});
+
+apnService.on('transmitted', function(notification, device) {
+    console.log("Notification " + JSON.stringify(notification) + " transmitted to: " + device.token.toString('hex'));
+});
+
+apnService.on('transmissionError', function(errCode, notification, device) {
+    reportError(new Error("Notification caused error: " + errCode + " for device " + device + " : " + notification));
+});
+
+apnService.on('timeout', function () {
+    console.log("Connection Timeout");
+});
+
+apnService.on('disconnected', function() {
+    console.log("Disconnected from APN");
+});
+
+apnService.on('socketError', console.error);
+
+apnFeedback.on('feedbackError', console.error);
+
 // Do something on feedback from APN service
-apn.feedback.on('feedback', function(feedbackData) {
+apnFeedback.on('feedback', function(feedbackData) {
     var tasks = _.map(feedbackData, function(i) {
         return function(callback) {
             console.log('device %s has been unresponsive since %s', i.device, i.time);
@@ -36,8 +77,21 @@ apn.feedback.on('feedback', function(feedbackData) {
 
     console.log('Feedback service reports %s unresponsive devices', feedbackData.length);
     async.series(tasks);
-});
+})
 
+/**
+ * Sends an APN notification
+ * @param tokens the tokens to send to
+ * @param msg The message to send
+ * @param payload The payload which includes arbitrary data
+ */
+function apnSend(tokens, msg, payload) {
+    var data = new apn.Notification();
+    data.alert = msg;
+    data.sound = 'default';
+    data.payload = payload;
+    apnService.pushNotification(data, tokens)
+};
 
 /**
  * Process a record
@@ -74,7 +128,7 @@ function processRecord(record, callback) {
         if (results !== undefined && results.length > 0) {
             _.each(results, function(result) {
                 //console.log('pushing to %s: %s', record.tokens, result.msg);
-                apn.send(record.tokens.split(','), result.msg, result.data);
+                apnSend(record.tokens.split(','), result.msg, result.data);
             });
         }
 
@@ -83,9 +137,12 @@ function processRecord(record, callback) {
             callback();
         });
     });
-}
+};
 
-
+/**
+ * The registration loop
+ * @param callback
+ */
 function registrationLoop(callback) {
     var tasks = [];
     db.getRegistrations(
@@ -99,14 +156,17 @@ function registrationLoop(callback) {
         function(row) {
             tasks.push(function(callback) { processRecord(row, callback); });
         });
-}
+};
 
+/**
+ * Main method
+ */
 function main() {
     var timeStart = new Date();
     console.log('Staring update loop at %s', timeStart.toString());
     registrationLoop(function(tasks) {
         var numberOfTasks = tasks.length;
-        console.log('There are %s tasks to complete...', numberOfTasks);
+        console.log('[%s]: There are %s tasks to complete...', numberOfTasks);
 
         async.parallelLimit(tasks, 5, function() {
             var timeEnd = new Date();
