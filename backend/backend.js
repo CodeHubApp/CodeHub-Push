@@ -115,9 +115,7 @@ function processRecord(record, callback) {
 
             if (err.message === 'Bad credentials') {
                 console.error('Removing %s at %s for bad credentials', record.oauth, record.domain);
-                return db.removeBadAuth(record.oauth, record.domain, function() {
-                    callback();
-                });
+                return db.removeBadAuth(record.oauth, record.domain, callback);
             }
             else {
                 results = [];
@@ -132,10 +130,7 @@ function processRecord(record, callback) {
             });
         }
 
-        db.updateUpdatedAt(record.oauth, record.domain, lastModified, function(err) {
-            if (err) reportError(err);
-            callback();
-        });
+        db.updateUpdatedAt(record.oauth, record.domain, lastModified, callback);
     });
 };
 
@@ -145,17 +140,21 @@ function processRecord(record, callback) {
  */
 function registrationLoop(callback) {
     var tasks = [];
-    db.getRegistrations(
-        function(err) {
-            if (err) {
+    db.getRegistrations(function(err) {
+        if (err) {
+            reportError(err);
+        } else {
+            callback(tasks);
+        }
+    },
+    function(row) {
+        tasks.push(function(callback) {
+            processRecord(row, function(err) {
                 reportError(err);
-            } else {
-                callback(tasks);
-            }
-        },
-        function(row) {
-            tasks.push(function(callback) { processRecord(row, callback); });
+                callback();
+            });
         });
+    });
 };
 
 /**
@@ -163,10 +162,10 @@ function registrationLoop(callback) {
  */
 function main() {
     var timeStart = new Date();
-    console.log('Staring update loop at %s', timeStart.toString());
+    //console.log('Staring update loop at %s', timeStart.toString());
     registrationLoop(function(tasks) {
         var numberOfTasks = tasks.length;
-        console.log('[%s]: There are %s tasks to complete...', numberOfTasks);
+        //console.log('There are %s tasks to complete...', numberOfTasks);
 
         async.parallelLimit(tasks, 5, function() {
             var timeEnd = new Date();
