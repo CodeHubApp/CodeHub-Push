@@ -13,7 +13,7 @@ ravenClient.patchGlobal();
 // A method to report errors
 function reportError(err) {
     ravenClient.captureError(err);
-    console.err(err);
+    console.error(err);
 }
 
 var app = express();
