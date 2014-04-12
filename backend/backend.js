@@ -15,6 +15,7 @@ ravenClient.patchGlobal();
 
 // A method to report errors
 function reportError(err) {
+    if (!err) return;
     ravenClient.captureError(err);
     console.error(err);
 }
@@ -150,7 +151,7 @@ function registrationLoop(callback) {
     function(row) {
         tasks.push(function(callback) {
             processRecord(row, function(err) {
-                reportError(err);
+                if (err) reportError(err);
                 callback();
             });
         });

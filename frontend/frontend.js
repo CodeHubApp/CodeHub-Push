@@ -12,6 +12,7 @@ ravenClient.patchGlobal();
 
 // A method to report errors
 function reportError(err) {
+    if (!err) return;
     ravenClient.captureError(err);
     console.error(err);
 }
