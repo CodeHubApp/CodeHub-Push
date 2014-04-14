@@ -178,7 +178,7 @@ function main() {
 }
 
 function mainTimer() {
-    setTimeout(main, 1000 * 60);
+    setTimeout(main, 1000 * 60 * 2);
 }
 
 // Welcome!
