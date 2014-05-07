@@ -152,7 +152,7 @@ function registrationLoop(callback) {
         tasks.push(function(callback) {
             processRecord(row, function(err) {
                 if (err) reportError(err);
-                callback();
+		setTimeout(callback, 100);
             });
         });
     });
