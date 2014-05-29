@@ -8,6 +8,12 @@ var _      = require('underscore'),
  * @param callback The callback
  */
 function processNotification(client, notification, callback) {
+    if (!notification) {
+        return callback(new Error('Notification object was undefined.'));
+    } else if (!notification.subject) {
+        return callback(new Error('Notification subject was undefined.'));
+    }
+
     var detailCallback = function(err, body) {
         if (err) return callback(err);
 
@@ -45,6 +51,7 @@ function processNotification(client, notification, callback) {
             callback(err);
         }
     };
+
 
     // Get the latest comment
     client.get(notification.subject.latest_comment_url, null, detailCallback);
