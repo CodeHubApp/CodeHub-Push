@@ -47,12 +47,12 @@ apnService.on('connected', function() {
 
 apnService.on('transmitted', function(notification, device) {
     console.log("Notification " + JSON.stringify(notification) + " transmitted to: " + device.token.toString('hex'));
-    influx.send('transmitted', {});
+    influx.send('transmitted', { 'device': device.token.toString('hex')});
 });
 
 apnService.on('transmissionError', function(errCode, notification, device) {
     reportError(new Error("Notification caused error: " + errCode + " for device " + device + " : " + notification));
-    influx.send('errors', {});
+    influx.send('transmission_errors', { 'error_code': errCode, 'device': device.token.toString('hex') });
 });
 
 apnService.on('timeout', function () {
