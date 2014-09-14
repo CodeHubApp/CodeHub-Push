@@ -13,6 +13,7 @@
     "time": "*",
     "request": "*",
     "mysql": "*",
-    "raven": "*"
+    "raven": "*",
+    "influx": "1.0.3"
   }
 }

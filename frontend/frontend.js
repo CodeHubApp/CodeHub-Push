@@ -2,7 +2,8 @@ var express = require('express')
   , http = require('http')
   , db = require('../lib/db')
   , github = require('../lib/github')
-  , raven = require('raven');
+  , raven = require('raven')
+  , influx = require('../lib/influx');
 
 // Configure Raven for error reporting
 var ravenClient = new raven.Client(process.env['RAVEN']);
@@ -64,6 +65,9 @@ app.post('/register', function(req, res) {
             }
 
             res.send(inserted ? 200 : 409);
+            if (inserted) {
+                influx.send('registered', { name: user });
+            }
         });
     });
 });

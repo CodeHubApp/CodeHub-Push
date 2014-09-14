@@ -5,7 +5,8 @@ var  _      = require('underscore'),
     github  = require('../lib/github'),
     notify  = require('./notifications'),
     apn     = require('apn'),
-    raven   = require('raven');
+    raven   = require('raven'),
+    influx  = require('../lib/influx');
 
 // Configure Raven for error reporting
 var ravenClient = new raven.Client(process.env['RAVEN']);
@@ -46,10 +47,12 @@ apnService.on('connected', function() {
 
 apnService.on('transmitted', function(notification, device) {
     console.log("Notification " + JSON.stringify(notification) + " transmitted to: " + device.token.toString('hex'));
+    influx.send('transmitted', { time: new Date() });
 });
 
 apnService.on('transmissionError', function(errCode, notification, device) {
     reportError(new Error("Notification caused error: " + errCode + " for device " + device + " : " + notification));
+    influx.send('errors', { time: new Date() });
 });
 
 apnService.on('timeout', function () {
@@ -77,6 +80,7 @@ apnFeedback.on('feedback', function(feedbackData) {
     });
 
     console.log('Feedback service reports %s unresponsive devices', feedbackData.length);
+    influx.send('unresponsive_devices', { value: tasks.length });
     async.series(tasks);
 })
 
@@ -152,7 +156,7 @@ function registrationLoop(callback) {
         tasks.push(function(callback) {
             processRecord(row, function(err) {
                 if (err) reportError(err);
-		setTimeout(callback, 100);
+                setTimeout(callback, 100);
             });
         });
     });
@@ -171,7 +175,10 @@ function main() {
         async.parallelLimit(tasks, 5, function() {
             var timeEnd = new Date();
             var diff = timeEnd - timeStart;
+            
             console.log('%s tasks complete in %s minutes', numberOfTasks, (diff / 1000 / 60).toFixed(2));
+            influx.send('work_items', { value: numberOfTasks, duration: diff });
+
             mainTimer();
         })
     });
