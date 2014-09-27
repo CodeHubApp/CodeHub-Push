@@ -3,6 +3,7 @@ var express = require('express')
   , db = require('../lib/db')
   , github = require('../lib/github')
   , raven = require('raven')
+  , async = require('async')
   , influx = require('../lib/influx');
 
 // Configure Raven for error reporting
@@ -19,7 +20,10 @@ function reportError(err) {
 }
 
 var app = express();
+app.set('views', __dirname + '/views');
+app.set('view engine', 'jade');
 app.set('port', process.env['PORT'] || 3000);
+app.use(express.static(__dirname + '/public'));
 app.use(express.bodyParser());
 express.logger.token('body', function(req) { return JSON.stringify(req.body) });
 app.use(express.logger('[:date] :remote-addr - :method :status - :url :body'));
@@ -30,6 +34,47 @@ app.use(app.router);
 if ('development' == app.get('env')) {
     app.use(express.errorHandler());
 }
+
+app.get('/', function(req, res) {
+    var time = req.query.time;
+    var precision = '1439m';
+
+    if (time === 'week') {
+        time = '7d';
+    } else if (time === 'month') {
+        time = '30d';
+    } else {
+        time = '1d';
+    }
+
+
+    var selectClause = 'group by time(1h) where time > now() - ' + time;
+    console.log(selectClause)
+    async.parallel({
+        work_items: function(callback) {
+            influx.query('select sum(value) from work_items.1h ' + selectClause, function(err, data) {
+                if (err) return callback(err);
+                callback(err, data[0]);
+            });
+        },
+        transmissions: function(callback) {
+            influx.query('select sum(count) from transmitted.1h ' + selectClause, function(err, data) {
+                if (err) return callback(err);
+                callback(err, data[0]);
+            });
+        },
+        new_users: function(callback) {
+            influx.query('select sum(count) from registered.1h ' + selectClause, function(err, data) {
+                if (err) return callback(err);
+                callback(err, data[0]);
+            });
+        },
+    },
+    function(err, data) {
+        data.time = req.query.time;
+        res.render('main', data);
+    });
+})
 
 /**
  * Get in-app purchase identifiers. Use this to disable purchases for in-app items
