@@ -9,8 +9,18 @@ var express = require('express')
   , async = require('async');
 
 // Configure Raven for error reporting
-var ravenClient = new raven.Client(config.raven);
-//ravenClient.patchGlobal();
+var ravenClient;
+if (config.raven) {
+    ravenClient = new raven.Client(config.raven);
+    ravenClient.patchGlobal();
+}
+
+// A method to report errors
+function reportError(err) {
+    if (ravenClient) 
+        ravenClient.captureError(err);
+    console.error(err);
+}
 
 // The APN feedback object
 var apnFeedback = new apn.feedback({ 
@@ -28,12 +38,9 @@ apnFeedback.on('feedback', function(feedbackData) {
         return function(callback) {
             console.log('device %s has been unresponsive since %s', i.device, i.time);
             db.removeExpiredRegistration(i.device, function(err) {
-                if (err) {
-                    ravenClient.captureError(err);
-                    console.error(err);
-                }
+                if (err) reportError(err);
                 callback(null);
-            })
+            });
         };
     });
 
@@ -117,8 +124,7 @@ app.post('/unregister', function(req, res, next) {
  * Catch all errors
  */
 app.use(function(err, req, res, next) {
-    ravenClient.captureError(err);
-    console.error(err);
+    reportError(err);
     res.send(500);
 });
 
@@ -142,5 +148,5 @@ http.createServer(app).listen(app.get('port'), function() {
         });
     }
 
-    //doBackgroundWork();
+    doBackgroundWork();
 });

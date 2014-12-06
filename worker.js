@@ -9,10 +9,18 @@ var  _      = require('underscore'),
     raven   = require('raven');
 
 // Configure Raven for error reporting
-var ravenClient = new raven.Client(config.raven);
+var ravenClient;
+if (config.raven) {
+    ravenClient = new raven.Client(config.raven);
+    ravenClient.patchGlobal();
+}
 
-// Install unhandled exception handler
-ravenClient.patchGlobal();
+// A method to report errors
+function reportError(err) {
+    if (ravenClient) 
+        ravenClient.captureError(err);
+    console.error(err);
+}
 
 // Instantiate the APN service mechanisms
 var apnService = new apn.connection({ address: config.apnServiceGateway, certData: config.apnCert, keyData: config.apnKey });

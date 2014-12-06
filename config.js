@@ -3,9 +3,6 @@ var config = module.exports = {};
 
 // The raven key
 config.raven = process.env['RAVEN'];
-if (!config.raven) {
-  throw new Error('You must assign a Sentry DSN');
-}
 
 // Certificate credentials
 if (process.env.NODE_ENV === 'production') {
