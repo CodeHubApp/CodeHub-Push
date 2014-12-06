@@ -1,18 +1,25 @@
 var express = require('express')
   , config = require('./config')
   , http = require('http')
-  , db = require('../lib/db')
-  , github = require('../lib/github')
+  , db = require('./lib/db')
+  , github = require('./lib/github')
   , raven = require('raven')
+  , apn = require('apn')
   , spawn = require('child_process').spawn
   , async = require('async');
 
 // Configure Raven for error reporting
 var ravenClient = new raven.Client(config.raven);
-ravenClient.patchGlobal();
+//ravenClient.patchGlobal();
 
 // The APN feedback object
-var apnFeedback = new apn.feedback({ address: config.apnFeedbackGateway, certData: config.apnCert, keyData: config.apnKey });
+var apnFeedback = new apn.feedback({ 
+    address: config.apnFeedbackGateway, 
+    certData: config.apnCert, 
+    keyData: config.apnKey ,
+    batchFeedback: true,
+    interval: 300
+});
 
 // Do something on feedback from APN service
 apnFeedback.on('feedback', function(feedbackData) {
@@ -30,7 +37,7 @@ apnFeedback.on('feedback', function(feedbackData) {
         };
     });
 
-    console.log('Feedback service reports %s unresponsive devices', tasks.length);\
+    console.log('Feedback service reports %s unresponsive devices', tasks.length);
     async.series(tasks);
 });
 
@@ -135,5 +142,5 @@ http.createServer(app).listen(app.get('port'), function() {
         });
     }
 
-    doBackgroundWork();
+    //doBackgroundWork();
 });
