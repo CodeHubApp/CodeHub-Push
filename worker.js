@@ -1,10 +1,10 @@
+#!/usr/bin/node
 var  _      = require('underscore'),
     config  = require('./config'),
     fs      = require('fs'),
     async   = require('async'),
     db      = require('./lib/db'),
     github  = require('./lib/github'),
-    notify  = require('./lib/notifications'),
     apn     = require('apn'),
     raven   = require('raven');
 
@@ -164,7 +164,7 @@ function processRecord(record, callback) {
         updatedDate = new Date(updatedDate);
     }
 
-    notify.processNotifications(client, updatedDate, function(err, lastModified, results) {
+    processNotifications(client, updatedDate, function(err, lastModified, results) {
         if (err) {
             console.error('Error procesing registrations: %s - %s', err, err.stack);
 

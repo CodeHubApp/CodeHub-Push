@@ -1,3 +1,5 @@
+#!/usr/bin/node
+
 var express = require('express')
   , config = require('./config')
   , http = require('http')
@@ -134,7 +136,7 @@ http.createServer(app).listen(app.get('port'), function() {
 
     function doBackgroundWork() {
         var worker = spawn(__dirname + '/worker.js');
-
+        
         worker.stdout.on('data', function (data) {
             console.log('[Worker] ' + data);
         });
@@ -144,6 +146,7 @@ http.createServer(app).listen(app.get('port'), function() {
         });
 
         worker.on('close', function(code) {
+    	    console.log('Background work done...');
             setTimeout(doBackgroundWork, 1000 * 60 * 2);
         });
     }
