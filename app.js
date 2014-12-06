@@ -8,6 +8,7 @@ var express = require('express')
   , raven = require('raven')
   , apn = require('apn')
   , spawn = require('child_process').spawn
+  , StatsD  = require('node-statsd')
   , async = require('async');
 
 // Configure Raven for error reporting
@@ -21,8 +22,16 @@ if (config.raven) {
 function reportError(err) {
     if (ravenClient) 
         ravenClient.captureError(err);
+    stats.increment('500_error');
     console.error(err);
 }
+
+// The statsD client for reporting statistics
+var stats = new StatsD({
+    host: 'graphite.dillonbuchanan',
+    prefix: 'codehub_push',
+    cacheDns: true,
+});
 
 // The APN feedback object
 var apnFeedback = new apn.feedback({ 
@@ -38,7 +47,10 @@ apnFeedback.on('feedback', function(feedbackData) {
     feedbackData = feedbackData || [];
     var tasks = feedbackData.map(function(i) {
         return function(callback) {
-            console.log('device %s has been unresponsive since %s', i.device, i.time);
+            if (!config.production) {
+                console.log('device %s has been unresponsive since %s', i.device, i.time);
+            }
+
             db.removeExpiredRegistration(i.device, function(err) {
                 if (err) reportError(err);
                 callback(null);
@@ -47,10 +59,14 @@ apnFeedback.on('feedback', function(feedbackData) {
     });
 
     console.log('Feedback service reports %s unresponsive devices', tasks.length);
+    stats.increment('unresponsive_devices', tasks.length);
     async.series(tasks);
 });
 
-apnFeedback.on('feedbackError', console.error);
+apnFeedback.on('feedbackError', function(err) {
+    stats.increment('feedback_error');
+    console.error(err);
+});
 
 // Setup express
 var app = express();
@@ -90,6 +106,9 @@ app.post('/register', function(req, res, next) {
         db.insertRegistration(token, oauth, user, domain, function(err, inserted) {
             if (err) return next(err);
             res.send(inserted ? 200 : 409);
+            if (inserted) {
+                stats.gauge('registrations', '+1');
+            }
         });
     });
 });
@@ -119,6 +138,9 @@ app.post('/unregister', function(req, res, next) {
     db.removeRegistration(token, oauth, domain, function(err, found) {
         if (err) return next(err);
         res.send(found ? 200 : 404);
+        if (fount) {
+            stats.gauge('registrations', '-1');
+        }
     });
 });
 
@@ -135,19 +157,10 @@ http.createServer(app).listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
 
     function doBackgroundWork() {
-        var worker = spawn(__dirname + '/worker.js');
-        
-        worker.stdout.on('data', function (data) {
-            console.log('[Worker] ' + data);
-        });
-
-        worker.stderr.on('data', function (data) {
-            console.error('[Worker] ' + data)
-        });
-
+        var worker = spawn(config.workerSpawn, [], { stdio: 'inherit' });
         worker.on('close', function(code) {
     	    console.log('Background work done...');
-            setTimeout(doBackgroundWork, 1000 * 60 * 2);
+            setTimeout(doBackgroundWork, config.workerPause);
         });
     }
 

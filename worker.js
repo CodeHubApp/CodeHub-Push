@@ -6,6 +6,7 @@ var  _      = require('underscore'),
     db      = require('./lib/db'),
     github  = require('./lib/github'),
     apn     = require('apn'),
+    StatsD  = require('node-statsd'),
     raven   = require('raven');
 
 // Configure Raven for error reporting
@@ -22,30 +23,48 @@ function reportError(err) {
     console.error(err);
 }
 
+// The statsD client for reporting statistics
+var stats = new StatsD({
+    host: 'graphite.dillonbuchanan',
+    prefix: 'codehub_push',
+    cacheDns: true,
+});
+
 // Instantiate the APN service mechanisms
 var apnService = new apn.connection({ address: config.apnServiceGateway, certData: config.apnCert, keyData: config.apnKey });
 
 apnService.on('connected', function() {
-    console.log("APN Connected");
+    if (!config.production) {
+        console.log("APN Connected");
+    }
 });
 
 apnService.on('transmitted', function(notification, device) {
-    console.log("Notification " + JSON.stringify(notification) + " transmitted to: " + device.token.toString('hex'));
+    stats.increment('transmitted');
+    if (!config.production) {
+        console.log("Notification " + JSON.stringify(notification) + " transmitted to: " + device.token.toString('hex'));
+    }
 });
 
 apnService.on('transmissionError', function(errCode, notification, device) {
+    stats.increment('transmission_error');
     reportError(new Error("Notification caused error: " + errCode + " for device " + device + " : " + notification));
 });
 
 apnService.on('timeout', function () {
-    console.log("Connection Timeout");
+    stats.increment('timeout');
+    console.error("Connection Timeout");
 });
 
 apnService.on('disconnected', function() {
-    console.log("Disconnected from APN");
+    stats.increment('disconnected');
+    console.error("Disconnected from APN");
 });
 
-apnService.on('socketError', console.error);
+apnService.on('socketError', function(err) {
+    stats.increment('socket_error');
+    console.error(err);
+});
 
 /**
  * Sends an APN notification
@@ -215,11 +234,13 @@ function registrationLoop(callback) {
 // The main loop
 var timeStart = new Date();
 registrationLoop(function(tasks) {
-    var numberOfTasks = tasks.length;
+    stats.gauge('tasks', tasks.length);
     async.parallelLimit(tasks, 5, function() {
-        var timeEnd = new Date();
-        var diff = timeEnd - timeStart;
-        console.log('%s tasks complete in %s minutes', numberOfTasks, (diff / 1000 / 60).toFixed(2));
+        var diff = (new Date()) - timeStart;
+        stats.timing('task_loop_duration', diff);
+        if (!config.production) {
+            console.log('%s tasks complete in %s minutes', tasks.length, (diff / 1000 / 60).toFixed(2));
+        }
         process.exit(0);
     });
 });
