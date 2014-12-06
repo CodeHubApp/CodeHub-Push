@@ -1,20 +1,18 @@
 {
   "name": "Codehub-Push",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "bash run.sh"
+    "start": "node app.js"
   },
   "dependencies": {
-    "express": "3.1.2",
-    "jade": "*",
-    "async": "*",
-    "apn": "*",
-    "underscore": "*",
-    "time": "*",
-    "request": "*",
-    "mysql": "*",
-    "raven": "*",
-    "influx": "1.0.3"
+    "apn": "^1.6.2",
+    "async": "^0.9.0",
+    "express": "^3.1.2",
+    "mysql": "^2.5.3",
+    "raven": "^0.7.2",
+    "request": "^2.49.0",
+    "time": "^0.11.0",
+    "underscore": "^1.7.0"
   }
 }
