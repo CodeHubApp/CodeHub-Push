@@ -32,7 +32,7 @@ if (!config.dbUser || !config.dbPass) {
 }
 
 // The spawn command
-config.workerSpawn = 'node ' + __dirname + '/worker.js';
+config.workerSpawn = __dirname + '/worker.js';
 
 // The pause (in ms) between the worker execution loop
 config.workerPause = 1000 * 60 * 2

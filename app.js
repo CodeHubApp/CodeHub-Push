@@ -29,7 +29,7 @@ function reportError(err) {
 // The statsD client for reporting statistics
 var stats = new StatsD({
     host: 'graphite.dillonbuchanan',
-    prefix: 'codehub_push',
+    prefix: 'codehub_push.',
     cacheDns: true,
 });
 
@@ -157,7 +157,13 @@ http.createServer(app).listen(app.get('port'), function() {
     console.log('Express server listening on port ' + app.get('port'));
 
     function doBackgroundWork() {
-        var worker = spawn(config.workerSpawn, [], { stdio: 'inherit' });
+        var worker = spawn(config.workerSpawn);
+        worker.stdout.on('data', function(data) {
+            process.stdout.write('[Worker]: ' + data);
+        });
+        worker.stderr.on('data', function(data) {
+            process.stderr.write('[Worker]: ' + data);
+        });
         worker.on('close', function(code) {
     	    console.log('Background work done...');
             setTimeout(doBackgroundWork, config.workerPause);

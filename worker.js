@@ -26,7 +26,7 @@ function reportError(err) {
 // The statsD client for reporting statistics
 var stats = new StatsD({
     host: 'graphite.dillonbuchanan',
-    prefix: 'codehub_push',
+    prefix: 'codehub_push.',
     cacheDns: true,
 });
 
