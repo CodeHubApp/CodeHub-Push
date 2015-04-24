@@ -18,7 +18,7 @@ if (config.raven) {
 
 // A method to report errors
 function reportError(err) {
-    if (ravenClient) 
+    if (ravenClient)
         ravenClient.captureError(err);
     console.error(err);
 }
@@ -103,28 +103,40 @@ function processNotification(client, notification, callback) {
             var msg = '';
 
             if (notification.subject.type === 'Release') {
-                msg = body.author.login + ' released ' + notification.subject.title;
-            } else {
-                    // If the two urls are the same then it's most likely that someone
-                    // just created the notification. If they're different it's most likely a comment
-                    var created = notification.subject.url === notification.subject.latest_comment_url;
-                    var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
-                    msg = body.user.login + (created ? ' opened' : ' commented on');
+              msg = body.author.login + ' released ' + notification.subject.title;
+            } else if (notification.subject.type === 'Commit') {
+              var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
+              var shortNum = num.substring(0, 6);
 
-                    if (notification.subject.type === 'Issue') {
-                        msg += ' issue';
-                        msg += ' ' + notification.repository.full_name + '#' + num;
-                        data['i'] = num;
-                    } else if (notification.subject.type === 'PullRequest') {
-                        msg += ' pull request';
-                        msg += ' ' + notification.repository.full_name + '#' + num;
-                        data['p'] = num;
-                    } else if (notification.subject.type === 'Commit') {
-                        num = num.substring(0, 6);
-                        msg += ' commit';
-                        msg += ' ' + notification.repository.full_name + '@' + num;
-                        data['c'] = num;
-                    }
+              msg = body.author.login + ' commented on ';
+              msg += ' commit';
+              msg += ' ' + notification.repository.full_name + '@' + num.substring(0, 6);
+              data['c'] = num;
+            } else if (notification.subject.type === 'Issue' || notification.subject.type === 'PullRequest') {
+              // If the two urls are the same then it's most likely that someone
+              // just created the notification. If they're different it's most likely a comment
+              var stateChange = notification.subject.url === notification.subject.latest_comment_url;
+              var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
+              var shortNum = num.substring(0, 6);
+
+              msg = body.user.login;
+              if (stateChange) {
+                msg += (body.state === 'open') ? ' opened' : ' closed';
+              } else {
+                msg += ' commented on';
+              }
+
+              if (notification.subject.type === 'Issue') {
+                msg += ' issue';
+                msg += ' ' + notification.repository.full_name + '#' + shortNum;
+                data['i'] = num;
+              } else if (notification.subject.type === 'PullRequest') {
+                msg += ' pull request';
+                msg += ' ' + notification.repository.full_name + '#' + shortNum;
+                data['p'] = num;
+              }
+            } else {
+              return callback(new Error('No support for subject type ' + notification.subject.type));
             }
 
             data['u'] = client.username;
