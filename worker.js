@@ -90,33 +90,41 @@ function processNotification(client, notification, callback) {
     if (!notification) {
         return callback(new Error('Notification object was undefined.'));
     } else if (!notification.subject) {
-        return callback(new Error('Notification subject was undefined.'));
+        return callback(new Error('Notification subject was undefined: ' + JSON.stringify(notification)));
+    } else if (!notification.subject.type) {
+        return callback(new Error('Notification type was undefined!'));
     }
 
     var detailCallback = function(err, body) {
         if (err) return callback(err);
 
         try {
-            // If the two urls are the same then it's most likely that someone
-            // just created the notification. If they're different it's most likely a comment
-            var created = notification.subject.url === notification.subject.latest_comment_url;
-            var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
-            var msg = body.user.login + (created ? ' opened' : ' commented on');
             var data = {};
+            var msg = '';
 
-            if (notification.subject.type === 'Issue') {
-                msg += ' issue';
-                msg += ' ' + notification.repository.full_name + '#' + num;
-                data['i'] = num;
-            } else if (notification.subject.type === 'PullRequest') {
-                msg += ' pull request';
-                msg += ' ' + notification.repository.full_name + '#' + num;
-                data['p'] = num;
-            } else if (notification.subject.type === 'Commit') {
-                num = num.substring(0, 6);
-                msg += ' commit';
-                msg += ' ' + notification.repository.full_name + '@' + num;
-                data['c'] = num;
+            if (notification.subject.type === 'Release') {
+                msg = body.author.login + ' released ' + notification.subject.title;
+            } else {
+                    // If the two urls are the same then it's most likely that someone
+                    // just created the notification. If they're different it's most likely a comment
+                    var created = notification.subject.url === notification.subject.latest_comment_url;
+                    var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
+                    msg = body.user.login + (created ? ' opened' : ' commented on');
+
+                    if (notification.subject.type === 'Issue') {
+                        msg += ' issue';
+                        msg += ' ' + notification.repository.full_name + '#' + num;
+                        data['i'] = num;
+                    } else if (notification.subject.type === 'PullRequest') {
+                        msg += ' pull request';
+                        msg += ' ' + notification.repository.full_name + '#' + num;
+                        data['p'] = num;
+                    } else if (notification.subject.type === 'Commit') {
+                        num = num.substring(0, 6);
+                        msg += ' commit';
+                        msg += ' ' + notification.repository.full_name + '@' + num;
+                        data['c'] = num;
+                    }
             }
 
             data['u'] = client.username;
@@ -127,6 +135,7 @@ function processNotification(client, notification, callback) {
                 data: data
             });
         } catch (err) {
+            console.error('Unable to parse notification: ' + JSON.stringify(body) + ' -- ' + JSON.stringify(notification));
             callback(err);
         }
     };

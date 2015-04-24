@@ -88,7 +88,11 @@ if ('development' == app.get('env')) {
  * use!
  */
 app.get('/in-app', function(req, res) {
-    res.json(200, ['com.dillonbuchanan.codehub.push']);
+    //if (req.query.version && req.query.version == '2.3.4') {
+    //    res.json(200, []);
+    //} else {
+        res.json(200, ['com.dillonbuchanan.codehub.push']);
+    //}
 });
 
 /**
@@ -138,7 +142,7 @@ app.post('/unregister', function(req, res, next) {
     db.removeRegistration(token, oauth, domain, function(err, found) {
         if (err) return next(err);
         res.send(found ? 200 : 404);
-        if (fount) {
+        if (found) {
             stats.gauge('registrations', '-1');
         }
     });
