@@ -105,10 +105,10 @@ function processNotification(client, notification, callback) {
             if (notification.subject.type === 'Release') {
               msg = body.author.login + ' released ' + notification.subject.title;
             } else if (notification.subject.type === 'Commit') {
+              // Get the number from the URL & create a short version for display
               var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
               var shortNum = num.substring(0, 6);
-
-              msg = body.author.login + ' commented on ';
+              msg = body.user.login + ' commented on ';
               msg += ' commit';
               msg += ' ' + notification.repository.full_name + '@' + num.substring(0, 6);
               data['c'] = num;
