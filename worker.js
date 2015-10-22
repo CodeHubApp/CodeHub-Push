@@ -108,7 +108,8 @@ function processNotification(client, notification, callback) {
               // Get the number from the URL & create a short version for display
               var num = notification.subject.url.substring(notification.subject.url.lastIndexOf('/') + 1);
               var shortNum = num.substring(0, 6);
-              msg = body.author.login + ' commented on ';
+	      var bodyUser = body.user || body.author;
+              msg = bodyUser.login + ' commented on ';
               msg += ' commit';
               msg += ' ' + notification.repository.full_name + '@' + num.substring(0, 6);
               data['c'] = num;
