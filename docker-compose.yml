@@ -1,0 +1,25 @@
+web:
+  image: thedillonb/codehub-push:latest
+  command: node /app/bin/www
+  ports:
+    - "127.0.0.1:9666:3000"
+  volumes:
+    - "./database.db:/app/database.db"
+
+feedback:
+  image: thedillonb/codehub-push:latest
+  command: node /app/bin/feedback
+  volumes:
+    - "./database.db:/app/database.db"
+    - "./certs:/app/certs"
+  environment:
+    NODE_ENV: production
+
+background:
+  image: thedillonb/codehub-push:latest
+  command: node /app/bin/background
+  volumes:
+    - "./database.db:/app/database.db"
+    - "./certs:/app/certs"
+  environment:
+    NODE_ENV: production

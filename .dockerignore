@@ -1,0 +1,7 @@
+/node_modules/*
+/test/*
+database.db
+Dockerfile
+Makefile
+docker-compose.yml
+*.md
