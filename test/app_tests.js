@@ -8,7 +8,7 @@ const winston = require('winston');
 
 describe('App', function() {
   winston.level = 'fatal';
-  before(() => db.load(':memory:').then(() => db.sync()));
+  before(() => db.load('postgresql://codehub_push_dev:dev@localhost/codehub_push').then(() => db.sync(true)));
 
   function registerUser(token, oauth) {
     nock('https://api.github.com').get('/notifications').reply(200);

@@ -7,19 +7,19 @@
   },
   "dependencies": {
     "apn": "^1.7.5",
-    "async": "^1.5.0",
-    "body-parser": "^1.14.1",
+    "async": "^1.5.2",
+    "body-parser": "^1.15.0",
     "co": "^4.6.0",
     "co-express": "^1.2.1",
     "co-wait": "0.0.0",
-    "express": "^4.13.3",
-    "express-validator": "^2.18.0",
-    "http-assert": "^1.1.1",
-    "morgan": "^1.6.1",
-    "request": "^2.65.0",
-    "sqlite3": "^3.1.1",
+    "express": "^4.13.4",
+    "express-validator": "^2.20.2",
+    "http-assert": "^1.2.0",
+    "morgan": "^1.7.0",
+    "pg-promise": "^3.4.1",
+    "request": "^2.69.0",
     "time": "^0.11.4",
-    "winston": "^2.1.0"
+    "winston": "^2.2.0"
   },
   "devDependencies": {
     "chai": "^3.4.0",

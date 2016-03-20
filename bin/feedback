@@ -12,8 +12,7 @@ const apnKey = path.join(__dirname, '..', 'certs', (prod ? 'key.production.pem' 
 process.on("SIGINT", process.exit);
 process.on("SIGTERM", process.exit);
 
-db.load(path.join(__dirname, '..', 'database.db'))
-.then(() => {
+db.load(process.env.DATABASE).then(() => {
   const apnFeedback = new apn.feedback({ cert: apnCert, key: apnKey, interval: 600, batchFeedback: true });
 
   apnFeedback.on('feedbackError', err =>
@@ -22,9 +21,10 @@ db.load(path.join(__dirname, '..', 'database.db'))
   apnFeedback.on('feedback', feedbackDevices => co(function *() {
     feedbackDevices = feedbackDevices || [];
     for (let i = 0; i < feedbackDevices.length; i++) {
-      const device = feedbackDevices[i].device;
+      const device = feedbackDevices[i].device.toString();
+      const time = feedbackDevices[i].time;
       yield db.removeExpiredRegistration(device)
-        .then(() => logger.info(`Successfully removed ${device}`))
+        .then(() => logger.info(`Successfully removed ${device} - last seen ${time}`))
         .catch(err => logger.error(`Error removing expired device ${device}`, err));
     }
   }));

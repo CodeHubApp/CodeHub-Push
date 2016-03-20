@@ -5,10 +5,10 @@ const path = require('path');
 const co = require('co');
 
 co(function *() {
-  yield db.load(path.join(__dirname, '..', 'database.db'));
-  yield db.sync();
+  yield db.load(process.env.DATABASE);
+  yield db.sync(true);
   process.exit(0);
 }).catch(err => {
-  console.error(err);
+  console.error(err.stack);
   process.exit(-1);
 });
