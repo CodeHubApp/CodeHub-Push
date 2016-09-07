@@ -41,7 +41,7 @@ function* main() {
   }
 }
 
-db.load(process.env.DATABASE)
+db.load(path.join(__dirname, '..', 'database.db'))
 .then(() => co(main))
 .then(() => logger.info('This loop should not have ended!'), logger.error)
 .then(() => process.exit(-1));

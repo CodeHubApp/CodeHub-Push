@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 describe('Worker', function() {
-  beforeEach(() => db.load('postgresql://codehub_push_dev:dev@localhost/codehub_push').then(() => db.sync(true)));
+  beforeEach(() => db.load(':memory:').then(() => db.sync()));
 
   it('Should remove user on bad credentials', co.wrap(function *() {
     nock('https://api.github.com').get('/notifications').query(true).reply(401, { "message": "Bad credentials" });

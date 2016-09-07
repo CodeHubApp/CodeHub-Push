@@ -2,6 +2,7 @@
 'use strict';
 const app = require('../lib/app');
 const db = require('../lib/db');
+const path = require('path');
 const co = require('co');
 const logger = require('winston');
 const port = process.env.PORT || 3000;
@@ -10,7 +11,7 @@ process.on("SIGINT", process.exit);
 process.on("SIGTERM", process.exit);
 
 co(function *() {
-  yield db.load(process.env.DATABASE);
+  yield db.load(path.join(__dirname, '..', 'database.db'));
   const http = app.listen(port, () => logger.info(`Listening on ${port}`));
 }).catch(err => {
   logger.error(err);

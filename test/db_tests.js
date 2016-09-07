@@ -5,7 +5,7 @@ const db = require('../lib/db');
 const co = require('co');
 
 describe('Database', function() {
-  beforeEach(() => db.load('postgresql://codehub_push_dev:dev@localhost/codehub_push').then(() => db.sync(true)));
+  beforeEach(() => db.load(':memory:').then(() => db.sync()));
 
   it('Should list the registrations', co.wrap(function *() {
     yield db.insertRegistration('token1', 'auth1', 'user1');
