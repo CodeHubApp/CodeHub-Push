@@ -3,30 +3,32 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node bin/www"
+    "start": "node bin/www",
+    "test": "mocha"
   },
   "dependencies": {
-    "apn": "^1.7.5",
+    "apn": "^1.7.8",
     "async": "^1.5.0",
-    "body-parser": "^1.14.1",
+    "body-parser": "^1.15.2",
     "co": "^4.6.0",
-    "co-express": "^1.2.1",
+    "co-express": "^1.2.2",
     "co-wait": "0.0.0",
-    "express": "^4.13.3",
-    "express-validator": "^2.18.0",
+    "express": "^4.14.0",
+    "express-validator": "^2.20.8",
     "http-assert": "^1.1.1",
     "morgan": "^1.6.1",
-    "request": "^2.65.0",
+    "request": "^2.74.0",
     "sqlite3": "^3.1.1",
     "time": "^0.11.4",
     "winston": "^2.1.0"
   },
   "devDependencies": {
     "chai": "^3.4.0",
-    "co-mocha": "^1.1.2",
-    "mocha": "^2.3.3",
-    "nock": "^2.17.0",
-    "supertest": "^1.1.0",
-    "supertest-as-promised": "^2.0.2"
+    "co-mocha": "^1.1.3",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.0.2",
+    "nock": "^8.0.0",
+    "supertest": "^2.0.0",
+    "supertest-as-promised": "^4.0.0"
   }
 }

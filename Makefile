@@ -1,10 +1,10 @@
-VERISON = latest
+VERISON = 1.0.1
 
 .PHONY: build push test
 
 build:
-	sudo docker build -t thedillonb/codehub-push:$(VERISON) .
+	docker build -t thedillonb/codehub-push:$(VERISON) .
 push: build
-	sudo docker push thedillonb/codehub-push:$(VERISON)
+	docker push thedillonb/codehub-push:$(VERISON)
 test:
-	mocha
+	./node_modules/.bin/mocha
