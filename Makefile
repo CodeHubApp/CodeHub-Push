@@ -1,4 +1,4 @@
-VERISON = 1.0.1
+VERISON = 1.0.2
 
 .PHONY: build push test
 
