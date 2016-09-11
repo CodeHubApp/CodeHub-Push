@@ -1,4 +1,4 @@
-FROM node:4.2.1
+FROM node:6.5.0
 MAINTAINER Dillon Buchanan <thedillonb@gmail.com>
 
 WORKDIR /app

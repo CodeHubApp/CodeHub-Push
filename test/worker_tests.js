@@ -18,11 +18,8 @@ describe('Worker', function() {
     const records = yield db.getRegistrations();
     records.should.have.length(1);
 
-    let err;
-    yield worker.processRecord(records[0], (tokens, msg, data) => {}).catch(e => err = e);
+    yield worker.processRecord(records[0], (tokens, msg, data) => {});
 
-    err.should.be.an.instanceof(Error);
-    err.message.should.equal('Bad credentials');
     const afterRecords = yield db.getRegistrations();
     afterRecords.should.have.length(0);
   }));
