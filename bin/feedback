@@ -12,7 +12,7 @@ const apnKey = path.join(__dirname, '..', 'certs', (prod ? 'key.production.pem' 
 process.on("SIGINT", process.exit);
 process.on("SIGTERM", process.exit);
 
-db.load(path.join(__dirname, '..', 'database.db'))
+db.load()
 .then(() => {
   const apnFeedback = new apn.feedback({ cert: apnCert, key: apnKey, interval: 600, batchFeedback: true });
 

@@ -1,25 +1,29 @@
 web:
-  image: thedillonb/codehub-push:1.0.1
+  image: thedillonb/codehub-push:1.0.3
   command: node /app/bin/www
+  links:
+    - postgres
   ports:
     - "127.0.0.1:9666:3000"
-  volumes:
-    - "./database.db:/app/database.db"
+  environment:
+    NODE_ENV: production
 
 feedback:
-  image: thedillonb/codehub-push:1.0.1
+  image: thedillonb/codehub-push:1.0.3
   command: node /app/bin/feedback
+  links:
+    - postgres
   volumes:
-    - "./database.db:/app/database.db"
     - "./certs:/app/certs"
   environment:
     NODE_ENV: production
 
 background:
-  image: thedillonb/codehub-push:1.0.1
+  image: thedillonb/codehub-push:1.0.3
   command: node /app/bin/background
+  links:
+    - postgres
   volumes:
-    - "./database.db:/app/database.db"
     - "./certs:/app/certs"
   environment:
     NODE_ENV: production
