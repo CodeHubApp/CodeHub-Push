@@ -5,15 +5,13 @@ web:
     - postgres
   ports:
     - "127.0.0.1:9666:3000"
-  environment:
-    NODE_ENV: production
+  env_file:
+    - settings.env
 
 background:
   image: thedillonb/codehub-push:1.0.3
   command: node /app/bin/background
   links:
     - postgres
-  volumes:
-    - "./certs:/app/certs"
-  environment:
-    NODE_ENV: production
+  env_file:
+    - settings.env

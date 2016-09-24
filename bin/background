@@ -5,14 +5,14 @@ const worker = require('../lib/worker');
 const Database = require('../lib/db');
 const apn = require('apn');
 const logger = require('winston');
-const settings = require('../settings');
 
+const apnTopic = process.env.APNTOPIC;
 const db = new Database();
 const apnProvider = new apn.Provider({
   token: {
-    key: settings.apnKey,
-    keyId: settings.keyId,
-    teamId: settings.teamId
+    key: process.env.APNKEY,
+    keyId: process.env.KEYID,
+    teamId: process.env.TEAMID
   }
 });
 
@@ -23,7 +23,7 @@ function apnSend(tokens, msg, payload) {
     const data = new apn.Notification();
     data.alert = msg;
     data.sound = 'default';
-    data.topic = settings.apnTopic;
+    data.topic = apnTopic;
     data.payload = payload;
     return apnProvider.send(data, tokens);
 };
