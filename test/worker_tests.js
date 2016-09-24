@@ -2,26 +2,33 @@
 const request = require('supertest-as-promised');
 const nock = require('nock');
 const should = require('chai').should();
-const db = require('../lib/db');
 const worker = require('../lib/worker');
 const co = require('co');
 const fs = require('fs');
 const path = require('path');
+const sinon = require('sinon');
 
 describe('Worker', function() {
-  beforeEach(() => db.load(':memory:').then(() => db.sync()));
-
   it('Should remove user on bad credentials', co.wrap(function *() {
     nock('https://api.github.com').get('/notifications').query(true).reply(401, { "message": "Bad credentials" });
 
-    yield db.insertRegistration('token1', 'auth1', 'user1');
-    const records = yield db.getRegistrations();
-    records.should.have.length(1);
+    const getRegistrations = sinon.stub().returns(Promise.resolve([{
+      tokens: ['1'],
+      oauth: 'auth',
+      username: 'moo',
+      updated_at: new Date()
+    }]));
 
-    yield worker.processRecord(records[0], (tokens, msg, data) => {});
+    const updateUpdatedAt = sinon.stub().returns(Promise.resolve());
+    const removeBadAuth = sinon.stub().returns(Promise.resolve());
+    const db = { getRegistrations, updateUpdatedAt, removeBadAuth }
 
-    const afterRecords = yield db.getRegistrations();
-    afterRecords.should.have.length(0);
+    const jobs = yield worker.processRecords(db, (tokens, msg, data) => {});
+
+    getRegistrations.called.should.equal(true);
+    removeBadAuth.called.should.equal(true);
+    updateUpdatedAt.called.should.equal(true);
+    jobs.should.equal(1);
   }));
 
   it('Should process registrations', co.wrap(function *() {
@@ -34,14 +41,21 @@ describe('Worker', function() {
       }
     }
 
-    yield db.insertRegistration('token1', 'auth1', 'user1');
-    yield db.insertRegistration('token2', 'auth1', 'user1');
+    const getRegistrations = sinon.stub().returns(Promise.resolve([{
+      tokens: ['token1', 'token2'],
+      oauth: 'auth',
+      username: 'user1',
+      updated_at: new Date()
+    }]));
 
-    const records = yield db.getRegistrations();
-    records.should.have.length(1);
+    const updateUpdatedAt = sinon.stub().returns(Promise.resolve());
+    const db = { getRegistrations, updateUpdatedAt }
 
     let apnMessages = [];
-    yield worker.processRecord(records[0], (tokens, msg, data) => apnMessages.push([tokens, msg, data]));
+    yield worker.processRecords(db, (tokens, msg, data) => {
+      apnMessages.push([tokens, msg, data]);
+      return Promise.resolve({});
+    });
 
     apnMessages.should.have.length(6);
     apnMessages.forEach(x => x[0].should.have.length(2).and.contain('token1').and.contain('token2'));
@@ -73,20 +87,62 @@ describe('Worker', function() {
   }));
 
   it('Should update time on error', co.wrap(function *() {
-    yield db.insertRegistration('token1', 'auth1', 'user1');
-    yield db.insertRegistration('token2', 'auth2', 'user2');
+    const getRegistrations = sinon.stub().returns(Promise.resolve([{
+      tokens: ['token1'],
+      oauth: 'auth1',
+      username: 'user1',
+      updated_at: new Date()
+    }, {
+      tokens: ['token2'],
+      oauth: 'auth2',
+      username: 'user2',
+      updated_at: new Date()
+    }]));
+
+    const updateUpdatedAt = sinon.stub().returns(Promise.resolve());
+    const db = { getRegistrations, updateUpdatedAt }
 
     const records = yield db.getRegistrations();
     records.should.have.length(2);
 
     let apnMessages = [];
-    for (let i = 0; i < records.length; i++) {
-      yield worker.processRecord(records[i], (tokens, msg, data) => apnMessages.push([tokens, msg, data])).catch(_ => {});
+    yield worker.processRecords(db, (tokens, msg, data) => apnMessages.push([tokens, msg, data])).catch(_ => {});
+    updateUpdatedAt.callCount.should.equal(2);
+  }));
+
+  it('Should remove user on expired device', co.wrap(function *() {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, '/worker_data.json'), 'utf8'));
+    for (let url in data) {
+      if (url === '/notifications') {
+        nock('https://api.github.com').get(url).query(true).reply(200, data[url]);
+      } else {
+        nock('https://api.github.com').get(url).reply(200, data[url]);
+      }
     }
 
-    const afterRecords = yield db.getRegistrations();
-    afterRecords.should.have.length(2);
-    records[0].updated_at.should.not.equal(afterRecords[0].updated_at);
-    records[1].updated_at.should.not.equal(afterRecords[1].updated_at);
+    const getRegistrations = sinon.stub().returns(Promise.resolve([{
+      tokens: ['1'],
+      oauth: 'auth',
+      username: 'moo',
+      updated_at: new Date()
+    }]));
+
+    const updateUpdatedAt = sinon.stub().returns(Promise.resolve());
+    const removeExpiredRegistration = sinon.stub().returns(Promise.resolve());
+    const db = { getRegistrations, updateUpdatedAt, removeExpiredRegistration }
+
+    const jobs = yield worker.processRecords(db, (tokens, msg, data) => {
+      return Promise.resolve({
+        failed: [{
+          device: '1',
+          status: 410
+        }]
+      })
+    });
+
+    getRegistrations.called.should.equal(true);
+    removeExpiredRegistration.called.should.equal(true);
+    updateUpdatedAt.called.should.equal(true);
+    jobs.should.equal(1);
   }));
 });

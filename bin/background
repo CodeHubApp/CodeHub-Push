@@ -1,47 +1,46 @@
 #!/usr/bin/env node
 'use strict';
 const co = require('co');
-const wait = require('co-wait');
 const worker = require('../lib/worker');
-const db = require('../lib/db');
+const Database = require('../lib/db');
 const apn = require('apn');
-const path = require('path');
 const logger = require('winston');
-const prod = process.env.NODE_ENV === 'production';
-const apnCert = path.join(__dirname, '..', 'certs', (prod ? 'cert.production.pem' : 'cert.development.pem'));
-const apnKey = path.join(__dirname, '..', 'certs', (prod ? 'key.production.pem' : 'key.development.pem'));
-const apnService = new apn.connection({ cert: apnCert, key: apnKey });
+const settings = require('../settings');
+
+const db = new Database();
+const apnProvider = new apn.Provider({
+  token: {
+    key: settings.apnKey,
+    keyId: settings.keyId,
+    teamId: settings.teamId
+  }
+});
 
 process.on("SIGINT", process.exit);
 process.on("SIGTERM", process.exit);
 
-apnService.on('connected', () => logger.info('APN connected'));
-apnService.on('timeout', () => logger.error("Connection Timeout"));
-apnService.on('disconnected', () => logger.error("Disconnected from APN"));
-apnService.on('socketError', err => logger.error('Apn socket error', err));
-apnService.on('transmissionError', (errCode, notification, device) =>
-  logger.error(`Notification caused error: ${errCode} for device ${device}: ${JSON.stringify(notification)}`));
-
 function apnSend(tokens, msg, payload) {
-    let data = new apn.Notification();
+    const data = new apn.Notification();
     data.alert = msg;
     data.sound = 'default';
+    data.topic = settings.apnTopic;
     data.payload = payload;
-    apnService.pushNotification(data, tokens);
+    return apnProvider.send(data, tokens);
 };
 
 function* main() {
   while (true) {
     const startTime = new Date();
     logger.info('Starting background work %s', startTime);
-    const tasks = yield worker.processAllRecords(apnSend).catch(err => logger.error('Error during loop processing', err));
+    const tasks = yield worker.processAllRecords(db, apnSend)
+      .catch(err => logger.error('Error during loop processing', err));
     const diff = (new Date()) - startTime;
     logger.info('%s tasks completed in %s minutes', tasks, (diff / 1000 / 60).toFixed(2));
-    yield wait(1000 * 60 * 3);
+    yield (done) => setTimeout(done, 1000 * 60 * 3);
   }
 }
 
-db.load()
-.then(() => co(main))
-.then(() => logger.info('This loop should not have ended!'), err => logger.error(err))
-.then(() => process.exit(-1));
+db.ping()
+  .then(() => co(main))
+  .then(() => logger.info('This loop should not have ended!'), err => logger.error(err))
+  .then(() => process.exit(-1));

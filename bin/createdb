@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 'use strict';
-const db = require('../lib/db');
+const Database = require('../lib/db');
 const co = require('co');
 
 co(function *() {
-  yield db.load();
+  const db = new Database();
   yield db.sync();
   process.exit(0);
 }).catch(err => {

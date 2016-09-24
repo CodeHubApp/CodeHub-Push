@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 const app = require('../lib/app');
-const db = require('../lib/db');
+const Database = require('../lib/db');
 const co = require('co');
 const logger = require('winston');
 const port = process.env.PORT || 3000;
@@ -10,10 +10,9 @@ process.on("SIGINT", process.exit);
 process.on("SIGTERM", process.exit);
 
 co(function *() {
-  yield db.load();
-  const http = app.listen(port, () => logger.info(`Listening on ${port}`));
-  const results = yield db.getRegistrations();
-  console.log(results[0].updated_at.toISOString());
+  const db = new Database();
+  yield db.ping();
+  app(db).listen(port, () => logger.info(`Listening on ${port}`));
 }).catch(err => {
   logger.error(err);
   process.exit(-1);
