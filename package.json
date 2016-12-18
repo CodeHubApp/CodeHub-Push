@@ -21,7 +21,6 @@
     "pg-promise": "^5.3.3",
     "request": "^2.75.0",
     "sinon": "^1.17.6",
-    "time": "^0.11.4",
     "winston": "^2.1.0"
   },
   "devDependencies": {
