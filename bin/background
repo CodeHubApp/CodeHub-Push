@@ -6,33 +6,43 @@ const Database = require('../lib/db');
 const apn = require('apn');
 const logger = require('winston');
 
-const apnTopic = process.env.APNTOPIC;
 const db = new Database();
-const apnProvider = new apn.Provider({
-  token: {
-    key: process.env.APNKEY,
-    keyId: process.env.KEYID,
-    teamId: process.env.TEAMID
-  }
-});
 
 process.on("SIGINT", process.exit);
 process.on("SIGTERM", process.exit);
 
-function apnSend(tokens, msg, payload) {
-    const data = new apn.Notification();
-    data.alert = msg;
-    data.sound = 'default';
-    data.topic = apnTopic;
-    data.payload = payload;
-    return apnProvider.send(data, tokens);
-};
+const apnSend = function() {
+  if (process.env.FAKEAPN) {
+    return function apnSend(tokens, msg, payload) {
+      logger.info(`Sending ${msg} - ${payload} to ${tokens}`);
+      return Promise.resolve({ failed: [] });
+    };
+  } else {
+    const apnTopic = process.env.APNTOPIC;
+    const apnProvider = new apn.Provider({
+      token: {
+        key: process.env.APNKEY,
+        keyId: process.env.KEYID,
+        teamId: process.env.TEAMID
+      }
+    });
+
+    return function apnSend(tokens, msg, payload) {
+      const data = new apn.Notification();
+      data.alert = msg;
+      data.sound = 'default';
+      data.topic = apnTopic;
+      data.payload = payload;
+      return apnProvider.send(data, tokens);
+    };
+  }
+}();
 
 function* main() {
   while (true) {
     const startTime = new Date();
     logger.info('Starting background work %s', startTime);
-    const tasks = yield worker.processAllRecords(db, apnSend)
+    const tasks = yield worker.processRecords(db, apnSend)
       .catch(err => logger.error('Error during loop processing', err));
     const diff = (new Date()) - startTime;
     logger.info('%s tasks completed in %s minutes', tasks, (diff / 1000 / 60).toFixed(2));

@@ -14,9 +14,8 @@ describe('App', function() {
     nock('https://api.github.com').get('/notifications').reply(200);
     nock('https://api.github.com').get('/user').reply(200, { login: 'moo' });
     const body = { token: 'moo', oauth: 'cow' };
-    const isRegistered = sinon.stub().returns(Promise.resolve(false));
     const insertRegistration = sinon.stub().returns(Promise.resolve());
-    const server = app({ isRegistered, insertRegistration });
+    const server = app({ insertRegistration });
     yield request(server).post('/register').send(body).expect(200);
     insertRegistration.called.should.equal(true);
   }));
