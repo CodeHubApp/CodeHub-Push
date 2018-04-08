@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-'use strict';
 const Database = require('../lib/db');
-const co = require('co');
 
-co(function *() {
+async function main() {
   const db = new Database();
-  yield db.sync();
+  await db.sync();
   process.exit(0);
-}).catch(err => {
+}
+
+main().catch(err => {
   console.error(err);
   process.exit(-1);
 });

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-'use strict';
-const co = require('co');
 const worker = require('../lib/worker');
 const Database = require('../lib/db');
 const apn = require('apn');
@@ -8,49 +6,54 @@ const logger = require('winston');
 
 const db = new Database();
 
-process.on("SIGINT", process.exit);
-process.on("SIGTERM", process.exit);
+process.on('SIGINT', process.exit);
+process.on('SIGTERM', process.exit);
 
-const apnSend = function() {
+function createApns() {
   if (process.env.FAKEAPN) {
     return function apnSend(tokens, msg, payload) {
       logger.info(`Sending ${msg} - ${payload} to ${tokens}`);
       return Promise.resolve({ failed: [] });
     };
-  } else {
-    const apnTopic = process.env.APNTOPIC;
-    const apnProvider = new apn.Provider({
-      token: {
-        key: process.env.APNKEY,
-        keyId: process.env.KEYID,
-        teamId: process.env.TEAMID
-      }
-    });
-
-    return function apnSend(tokens, msg, payload) {
-      const data = new apn.Notification();
-      data.alert = msg;
-      data.sound = 'default';
-      data.topic = apnTopic;
-      data.payload = payload;
-      return apnProvider.send(data, tokens);
-    };
   }
-}();
 
-function* main() {
+  const apnTopic = process.env.APNTOPIC;
+  const apnProvider = new apn.Provider({
+    token: {
+      key: process.env.APNKEY,
+      keyId: process.env.KEYID,
+      teamId: process.env.TEAMID
+    }
+  });
+
+  return function apnSend(tokens, msg, payload) {
+    const data = new apn.Notification();
+    data.alert = msg;
+    data.sound = 'default';
+    data.topic = apnTopic;
+    data.payload = payload;
+    return apnProvider.send(data, tokens);
+  };
+}
+
+const apnSend = createApns();
+
+async function main() {
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const startTime = new Date();
     logger.info('Starting background work %s', startTime);
-    const tasks = yield worker.processRecords(db, apnSend)
+    const tasks = await worker
+      .processRecords(db, apnSend)
       .catch(err => logger.error('Error during loop processing', err));
-    const diff = (new Date()) - startTime;
+    const diff = new Date() - startTime;
     logger.info('%s tasks completed in %s minutes', tasks, (diff / 1000 / 60).toFixed(2));
-    yield (done) => setTimeout(done, 1000 * 60 * 3);
+    await new Promise(res => setTimeout(res, 1000 * 60 * 3));
   }
 }
 
-db.ping()
-  .then(() => co(main))
+db
+  .ping()
+  .then(() => main())
   .then(() => logger.info('This loop should not have ended!'), err => logger.error(err))
   .then(() => process.exit(-1));

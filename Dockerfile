@@ -1,5 +1,5 @@
-FROM node:6.5.0
-MAINTAINER Dillon Buchanan <thedillonb@gmail.com>
+FROM node:9
+LABEL maintainer="thedillonb@gmail.com"
 
 WORKDIR /app
 COPY . /app

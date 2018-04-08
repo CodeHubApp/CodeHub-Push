@@ -1,10 +1,10 @@
-VERSION = 1.0.3
+VERSION = latest
 
 .PHONY: build push test
 
-build:
+build: test
 	docker build -t thedillonb/codehub-push:$(VERSION) .
 push: build
 	docker push thedillonb/codehub-push:$(VERSION)
 test:
-	./node_modules/.bin/mocha
+	npm t

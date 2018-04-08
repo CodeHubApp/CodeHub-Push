@@ -4,33 +4,33 @@
   "private": true,
   "scripts": {
     "start": "node bin/www",
-    "test": "mocha",
+    "test": "eslint lib/**/*.js test/*.js bin/* && mocha",
     "coverage": "istanbul cover _mocha"
   },
   "dependencies": {
-    "apn": "^2.0.0",
-    "async": "^2.0.1",
-    "body-parser": "^1.15.2",
-    "co": "^4.6.0",
-    "co-express": "^1.2.2",
-    "express": "^4.14.0",
-    "express-rate-limit": "^2.5.0",
-    "express-validator": "^3.0.0",
-    "http-assert": "^1.1.1",
-    "morgan": "^1.6.1",
-    "pg-promise": "^5.3.3",
-    "request": "^2.75.0",
-    "sinon": "^1.17.6",
-    "winston": "^2.1.0"
+    "apn": "^2.2.0",
+    "async": "^2.6.0",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.3",
+    "express-rate-limit": "^2.11.0",
+    "express-validator": "^5.1.1",
+    "http-assert": "^1.3.0",
+    "morgan": "^1.9.0",
+    "pg-promise": "^8.2.2",
+    "request": "^2.85.0",
+    "winston": "^2.4.1"
   },
   "devDependencies": {
-    "chai": "^3.4.0",
-    "co-mocha": "^1.1.3",
+    "chai": "^3.5.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-import": "^2.10.0",
     "istanbul": "^0.4.5",
-    "mocha": "^3.0.2",
-    "nock": "^9.0.0",
-    "sinon": "^1.17.5",
-    "supertest": "^2.0.0",
-    "supertest-as-promised": "^4.0.0"
+    "mocha": "^5.0.5",
+    "nock": "^9.2.3",
+    "prettier": "^1.11.1",
+    "sinon": "^4.5.0",
+    "supertest": "^3.0.0"
   }
 }
