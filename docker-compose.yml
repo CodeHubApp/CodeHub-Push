@@ -1,16 +1,7 @@
-web:
+main:
   image: thedillonb/codehub-push:1.0.3
-  command: node /app/bin/www
-  links:
-    - postgres
   ports:
     - "127.0.0.1:9666:3000"
-  env_file:
-    - settings.env
-
-background:
-  image: thedillonb/codehub-push:1.0.3
-  command: node /app/bin/background
   links:
     - postgres
   env_file:

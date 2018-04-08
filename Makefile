@@ -1,4 +1,4 @@
-VERSION = latest
+VERSION = 1.0.3
 
 .PHONY: build push test
 

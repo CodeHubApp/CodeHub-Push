@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-const worker = require('../lib/worker');
-const Database = require('../lib/db');
 const apn = require('apn');
 const logger = require('winston');
 
-const db = new Database();
+const worker = require('../lib/worker');
+const Database = require('../lib/db');
+const app = require('../lib/app');
 
 process.on('SIGINT', process.exit);
 process.on('SIGTERM', process.exit);
@@ -36,9 +36,15 @@ function createApns() {
   };
 }
 
-const apnSend = createApns();
-
 async function main() {
+  const apnSend = createApns();
+  const db = new Database();
+  const port = process.env.PORT || 3000;
+
+  await db.ping();
+
+  app(db).listen(port, () => logger.info(`Listening on ${port}`));
+
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const startTime = new Date();
@@ -52,8 +58,6 @@ async function main() {
   }
 }
 
-db
-  .ping()
-  .then(() => main())
-  .then(() => logger.info('This loop should not have ended!'), err => logger.error(err))
+main()
+  .then(() => logger.warn('This loop should not have ended!'), err => logger.error(err))
   .then(() => process.exit(-1));

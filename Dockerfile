@@ -6,4 +6,4 @@ COPY . /app
 
 RUN npm install
 
-CMD ["node", "--version"]
+CMD ["node", "/app/bin/main"]
