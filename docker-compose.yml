@@ -1,5 +1,5 @@
 main:
-  image: thedillonb/codehub-push:1.0.3
+  image: thedillonb/codehub-push:1.0.5
   ports:
     - "127.0.0.1:9666:3000"
   links:
