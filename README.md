@@ -11,8 +11,7 @@ Want to talk about it? Find me on Twitter at @thedillonb, or @codehubapp.
 CodeHub
 -----------
 
-[CodeHub](https://github.com/thedillonb/CodeHub) is an iOS application that I also created. The application is
-designed using Xamarin.iOS (C#) and is currently avaiable in the [iTunes store](https://itunes.apple.com/us/app/codehub-github-for-ios/id707173885?mt=8).
+[CodeHub](https://github.com/thedillonb/CodeHub) is an iOS application that is created and designed using Xamarin.iOS (C#) and is currently available in the [iTunes store](https://itunes.apple.com/us/app/codehub-github-for-ios/id707173885?mt=8).
 
 
 Licence
