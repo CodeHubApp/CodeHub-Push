@@ -13,9 +13,9 @@ CodeHub
 
 [CodeHub](https://github.com/thedillonb/CodeHub) is an iOS application that is created and designed using Xamarin.iOS (C#) and is currently available in the [iTunes store](https://itunes.apple.com/us/app/codehub-github-for-ios/id707173885?mt=8).
 
-
 Licence
 -------------
+
 Copyright 2012 Dillon Buchanan
 
 Licensed under the Apache License, Version 2.0 (the "License");

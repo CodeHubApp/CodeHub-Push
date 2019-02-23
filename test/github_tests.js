@@ -1,6 +1,6 @@
 const nock = require('nock');
-const github = require('../lib/github');
 const { expect } = require('chai');
+const github = require('../lib/github');
 
 describe('GitHub Client', () => {
   it('Should have the right headers', () => {

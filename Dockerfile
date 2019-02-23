@@ -1,4 +1,4 @@
-FROM node:9
+FROM node:11
 LABEL maintainer="thedillonb@gmail.com"
 
 WORKDIR /app

@@ -1,9 +1,9 @@
 const request = require('supertest');
 const nock = require('nock');
-const app = require('../lib/app');
 const winston = require('winston');
 const sinon = require('sinon');
 const { expect } = require('chai');
+const app = require('../lib/app');
 
 describe('App', () => {
   winston.level = 'fatal';

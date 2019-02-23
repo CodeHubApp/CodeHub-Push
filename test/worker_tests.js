@@ -1,9 +1,9 @@
 const nock = require('nock');
-const worker = require('../lib/worker');
 const fs = require('fs');
 const path = require('path');
 const sinon = require('sinon');
 const { expect } = require('chai');
+const worker = require('../lib/worker');
 
 describe('Worker', () => {
   it('Should remove user on bad credentials', async () => {
@@ -70,7 +70,7 @@ describe('Worker', () => {
       return Promise.resolve({});
     });
 
-    expect(apnMessages).to.have.length(6);
+    expect(apnMessages).to.have.length(7);
     apnMessages.forEach(x => {
       expect(x[0])
         .to.have.length(2)
@@ -129,6 +129,11 @@ describe('Worker', () => {
     expect(apnMessages[5][2])
       .to.have.property('c')
       .and.equal('cd9fdc3eb74bfea3900913e9cf39ca9eb0ed1d66');
+
+    expect(apnMessages[6][1]).to.equal('octokit/octokit.net v0.1.1 released');
+    expect(apnMessages[6][2])
+      .to.have.property('r')
+      .and.equal('octokit/octokit.net');
   });
 
   it('Should update time on error', async () => {
